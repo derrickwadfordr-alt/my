@@ -6838,3 +6838,154 @@
   object-fit: cover;
   display: block;
 }
+
+/* ==========================================
+   仿日本聊天软件 (Tuk) 风格 — 默认聊天室主题
+   所有选择器限定在 .chat-room-wrapper 内，不影响列表页
+   ========================================== */
+
+/* ---------- 1. 聊天室背景 ---------- */
+.chat-room-wrapper {
+  background-color: #abc1d0 !important;
+}
+.chat-app .chat-room-wrapper > .page-body {
+  background-color: #abc1d0 !important;
+}
+
+/* ---------- 2. 顶部栏 ---------- */
+.chat-room-wrapper > .page-header {
+  background: #abc1d0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.chat-room-wrapper .page-title {
+  font-size: 16px !important;
+  color: #000 !important;
+}
+.chat-room-wrapper .chat-typing-indicator {
+  color: #666 !important;
+}
+.chat-room-wrapper .page-back-btn {
+  color: #000 !important;
+}
+
+/* ---------- 3. 消息行间距 ---------- */
+.chat-room-wrapper .chat-msg-wrapper {
+  margin-bottom: 4px !important;
+}
+.chat-room-wrapper .chat-msg-wrapper[data-consecutive] {
+  margin-top: -8px !important;
+}
+
+/* ---------- 4. 头像 ---------- */
+.chat-room-wrapper .chat-msg-wrapper[data-role="assistant"] .chat-msg-avatar {
+  width: 39px !important;
+  height: 39px !important;
+  min-width: 39px !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+.chat-room-wrapper .chat-msg-wrapper[data-role="assistant"] .chat-msg-avatar img {
+  border-radius: 10px !important;
+}
+/* 连续消息隐藏头像 */
+.chat-room-wrapper .chat-msg-wrapper[data-role="assistant"][data-consecutive] .chat-msg-avatar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+/* 我方头像隐藏 */
+.chat-room-wrapper .chat-msg-wrapper[data-role="user"] .chat-msg-avatar {
+  display: none !important;
+}
+
+/* ---------- 5. 气泡本体 ---------- */
+.chat-room-wrapper .chat-bubble-role-user,
+.chat-room-wrapper .chat-bubble-role-assistant {
+  position: relative !important;
+  padding: 10px 14px !important;
+  line-height: 1.5 !important;
+  font-size: 14px !important;
+  border-radius: 18px !important;
+  word-wrap: break-word !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+/* 我方（黄色） */
+.chat-room-wrapper .chat-bubble-role-user {
+  background: #ffe93a !important;
+  color: #000 !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+/* 对方（白色） */
+.chat-room-wrapper .chat-bubble-role-assistant {
+  background: #ffffff !important;
+  color: #000 !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+/* ---------- 6. 气泡尖角 ---------- */
+/* 对方尖角（左侧） */
+.chat-room-wrapper .chat-msg-wrapper[data-role="assistant"]:not([data-consecutive]) .chat-bubble-role-assistant::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -12px !important;
+  width: 12px !important;
+  height: 16px !important;
+  background-color: transparent !important;
+  border-top-right-radius: 100% !important;
+  box-shadow: 6px 0 0 0 #ffffff !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+/* 我方尖角（右侧） */
+.chat-room-wrapper .chat-msg-wrapper[data-role="user"]:not([data-consecutive]) .chat-bubble-role-user::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: -12px !important;
+  width: 12px !important;
+  height: 16px !important;
+  background-color: transparent !important;
+  border-top-left-radius: 100% !important;
+  box-shadow: -6px 0 0 0 #ffe93a !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+/* 连续消息隐藏尖角 */
+.chat-room-wrapper .chat-msg-wrapper[data-consecutive] .chat-bubble-role-assistant::after,
+.chat-room-wrapper .chat-msg-wrapper[data-consecutive] .chat-bubble-role-user::after {
+  display: none !important;
+}
+
+/* ---------- 7. 群聊昵称 ---------- */
+.chat-room-wrapper .chat-group-sender-name {
+  font-size: 13px !important;
+  font-weight: bold !important;
+  color: #454545 !important;
+}
+
+/* ---------- 8. 输入栏 ---------- */
+.chat-room-wrapper .chat-input-bar {
+  background: #abc1d0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.chat-room-wrapper .chat-input-bar .chat-input-textarea {
+  background: rgba(255,255,255,0.35) !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #333 !important;
+}
+
+/* ---------- 9. 系统消息 ---------- */
+.chat-room-wrapper .chat-sys-msg {
+  background: rgba(0,0,0,0.06) !important;
+  color: #555 !important;
+}
