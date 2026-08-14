@@ -6858,6 +6858,10 @@
   border: none !important;
   box-shadow: none !important;
 }
+.chat-room-wrapper .page-header-content {
+  height: 44px !important;
+  min-height: 44px !important;
+}
 .chat-room-wrapper .page-title {
   font-size: 16px !important;
   color: #000 !important;
@@ -6868,13 +6872,23 @@
 .chat-room-wrapper .page-back-btn {
   color: #000 !important;
 }
-
-/* ---------- 3. 消息行间距 ---------- */
-.chat-room-wrapper .chat-msg-wrapper {
-  margin-bottom: 4px !important;
+.chat-room-wrapper .page-header-right {
+  color: #000 !important;
 }
+
+/* ---------- 3. 消息行布局与间距 ---------- */
+.chat-room-wrapper .chat-msg-wrapper {
+  overflow: visible !important;
+  position: relative !important;
+  gap: 8px !important;
+}
+/* 消息列表的 gap 控制（page-body 用 flex-col gap） */
+.chat-room-wrapper > .page-body {
+  gap: 7px !important;
+}
+/* 连续消息收紧间距 */
 .chat-room-wrapper .chat-msg-wrapper[data-consecutive] {
-  margin-top: -8px !important;
+  margin-top: -3px !important;
 }
 
 /* ---------- 4. 头像 ---------- */
@@ -6884,14 +6898,15 @@
   min-width: 39px !important;
   border-radius: 10px !important;
   overflow: hidden !important;
+  transform: translateY(-6px) !important;
+  flex-shrink: 0 !important;
 }
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"] .chat-msg-avatar img {
   border-radius: 10px !important;
 }
-/* 连续消息隐藏头像 */
+/* 连续消息隐藏头像（保留占位） */
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"][data-consecutive] .chat-msg-avatar {
-  opacity: 0 !important;
-  pointer-events: none !important;
+  visibility: hidden !important;
 }
 /* 我方头像隐藏 */
 .chat-room-wrapper .chat-msg-wrapper[data-role="user"] .chat-msg-avatar {
@@ -6902,7 +6917,7 @@
 .chat-room-wrapper .chat-bubble-role-user,
 .chat-room-wrapper .chat-bubble-role-assistant {
   position: relative !important;
-  padding: 10px 14px !important;
+  padding: 4px 14px !important;
   line-height: 1.5 !important;
   font-size: 14px !important;
   border-radius: 18px !important;
@@ -6923,6 +6938,11 @@
   background: #ffffff !important;
   color: #000 !important;
   border-bottom-left-radius: 4px !important;
+}
+
+/* 内容区 overflow 解除（让尖角/时间戳不被裁） */
+.chat-room-wrapper .chat-msg-content-wrap {
+  overflow: visible !important;
 }
 
 /* ---------- 6. 气泡尖角 ---------- */
@@ -6964,9 +6984,12 @@
 
 /* ---------- 7. 群聊昵称 ---------- */
 .chat-room-wrapper .chat-group-sender-name {
-  font-size: 13px !important;
-  font-weight: bold !important;
-  color: #454545 !important;
+  display: block !important;
+  visibility: visible !important;
+  font-size: 11px !important;
+  color: #666666 !important;
+  margin-bottom: 2px !important;
+  line-height: 1 !important;
 }
 
 /* ---------- 8. 输入栏 ---------- */
@@ -6978,14 +7001,48 @@
   -webkit-backdrop-filter: none !important;
 }
 .chat-room-wrapper .chat-input-bar .chat-input-textarea {
-  background: rgba(255,255,255,0.35) !important;
+  background: #abc1d0 !important;
   border: none !important;
   box-shadow: none !important;
   color: #333 !important;
 }
-
-/* ---------- 9. 系统消息 ---------- */
-.chat-room-wrapper .chat-sys-msg {
-  background: rgba(0,0,0,0.06) !important;
+.chat-room-wrapper .chat-input-bar .chat-input-textarea:focus {
+  outline: none !important;
+}
+/* 底部操作按钮区域 */
+.chat-room-wrapper .chat-input-bar .chat-input-actions {
+  background: #abc1d0 !important;
+}
+.chat-room-wrapper .chat-input-bar .chat-input-actions .ui-bare-btn {
   color: #555 !important;
+}
+
+/* ---------- 9. 系统消息与日期分隔 ---------- */
+.chat-room-wrapper .chat-sys-msg {
+  background: rgba(0,0,0,0.05) !important;
+  color: #555 !important;
+  font-size: 11px !important;
+}
+
+/* ---------- 10. 转账卡片压缩 ---------- */
+.chat-room-wrapper [class*="transfer-card"],
+.chat-room-wrapper [class*="red-packet"] {
+  padding: 6px 8px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-width: 160px !important;
+  border-radius: 8px !important;
+  background: #f29c48 !important;
+  border: none !important;
+}
+
+/* ---------- 11. 语音气泡适配 ---------- */
+.chat-room-wrapper .voice-msg-bubble {
+  padding: 2px 10px 0 2px !important;
+}
+
+/* ---------- 12. 引用消息 ---------- */
+.chat-room-wrapper .chat-quote-bar {
+  background: transparent !important;
+  border-color: rgba(0,0,0,0.1) !important;
 }
