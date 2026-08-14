@@ -6861,6 +6861,8 @@
 .chat-room-wrapper .page-header-content {
   height: 44px !important;
   min-height: 44px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
 }
 .chat-room-wrapper .page-title {
   font-size: 16px !important;
@@ -6881,14 +6883,19 @@
   overflow: visible !important;
   position: relative !important;
   gap: 8px !important;
+  align-items: flex-start !important;
 }
-/* 消息列表的 gap 控制（page-body 用 flex-col gap） */
+/* 消息列表的 gap 控制 */
 .chat-room-wrapper > .page-body {
   gap: 7px !important;
 }
+/* 首条/独立消息顶开距离 */
+.chat-room-wrapper .chat-msg-wrapper:not([data-consecutive]) {
+  margin-top: 14px !important;
+}
 /* 连续消息收紧间距 */
 .chat-room-wrapper .chat-msg-wrapper[data-consecutive] {
-  margin-top: -3px !important;
+  margin-top: 0px !important;
 }
 
 /* ---------- 4. 头像 ---------- */
@@ -6898,8 +6905,10 @@
   min-width: 39px !important;
   border-radius: 10px !important;
   overflow: hidden !important;
-  transform: translateY(-6px) !important;
+  transform: translateY(-12px) !important;
   flex-shrink: 0 !important;
+  margin-right: 8px !important;
+  z-index: 10 !important;
 }
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"] .chat-msg-avatar img {
   border-radius: 10px !important;
@@ -6943,6 +6952,7 @@
 /* 内容区 overflow 解除（让尖角/时间戳不被裁） */
 .chat-room-wrapper .chat-msg-content-wrap {
   overflow: visible !important;
+  position: relative !important;
 }
 
 /* ---------- 6. 气泡尖角 ---------- */
@@ -6982,13 +6992,15 @@
   display: none !important;
 }
 
-/* ---------- 7. 群聊昵称 ---------- */
+/* ---------- 7. 群聊昵称 / 发送者名字 ---------- */
 .chat-room-wrapper .chat-group-sender-name {
   display: block !important;
   visibility: visible !important;
   font-size: 11px !important;
   color: #666666 !important;
+  margin-top: -12px !important;
   margin-bottom: 2px !important;
+  margin-left: 2px !important;
   line-height: 1 !important;
 }
 
@@ -7006,6 +7018,9 @@
   box-shadow: none !important;
   color: #333 !important;
 }
+.chat-room-wrapper .chat-input-bar .chat-input-textarea::placeholder {
+  color: rgba(0,0,0,0.3) !important;
+}
 .chat-room-wrapper .chat-input-bar .chat-input-textarea:focus {
   outline: none !important;
 }
@@ -7015,6 +7030,7 @@
 }
 .chat-room-wrapper .chat-input-bar .chat-input-actions .ui-bare-btn {
   color: #555 !important;
+  opacity: 0.7 !important;
 }
 
 /* ---------- 9. 系统消息与日期分隔 ---------- */
@@ -7024,7 +7040,7 @@
   font-size: 11px !important;
 }
 
-/* ---------- 10. 转账卡片压缩 ---------- */
+/* ---------- 10. 转账/红包卡片压缩 ---------- */
 .chat-room-wrapper [class*="transfer-card"],
 .chat-room-wrapper [class*="red-packet"] {
   padding: 6px 8px !important;
@@ -7034,6 +7050,24 @@
   border-radius: 8px !important;
   background: #f29c48 !important;
   border: none !important;
+  color: #000 !important;
+}
+.chat-room-wrapper [class*="transfer-title"],
+.chat-room-wrapper [class*="transfer-amount"] {
+  margin: 0 0 2px 0 !important;
+  line-height: 1 !important;
+  font-size: 13px !important;
+}
+.chat-room-wrapper [class*="transfer-note"],
+.chat-room-wrapper [class*="transfer-desc"] {
+  margin: 0 !important;
+  line-height: 1 !important;
+  font-size: 10px !important;
+}
+.chat-room-wrapper [class*="transfer-icon"] {
+  width: 22px !important;
+  height: 22px !important;
+  margin-right: 6px !important;
 }
 
 /* ---------- 11. 语音气泡适配 ---------- */
@@ -7045,4 +7079,29 @@
 .chat-room-wrapper .chat-quote-bar {
   background: transparent !important;
   border-color: rgba(0,0,0,0.1) !important;
+}
+
+/* ---------- 13. 通话记录卡片变文字气泡 ---------- */
+.chat-room-wrapper [class*="call-record"],
+.chat-room-wrapper [class*="call-msg"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  color: inherit !important;
+  font-size: 14px !important;
+}
+
+/* ---------- 14. 思维链触发条适配背景 ---------- */
+.chat-room-wrapper .chat-reasoning-trigger {
+  background: rgba(255,255,255,0.5) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* ---------- 15. 内心独白卡片配色 ---------- */
+.chat-room-wrapper .chat-thought-card {
+  margin-left: 52px !important;
 }
