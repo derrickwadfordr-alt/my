@@ -235,9 +235,14 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
 
             {/* 新建世界线弹窗 */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => setShowCreateModal(false)}>
+                <div 
+                    className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-[9999] flex items-center justify-center px-4"
+                    style={{ margin: 0 }}
+                    onClick={() => setShowCreateModal(false)}
+                >
                     <div 
                         className="bg-[var(--c-surface)] rounded-xl w-full max-w-[400px] p-6 shadow-xl"
+                        style={{ maxHeight: '80vh', overflowY: 'auto' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="ts-18 font-bold text-[var(--c-text-title)] mb-4">新建世界线</h3>
@@ -276,7 +281,7 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
                                     setNewWorldLineName("");
                                     setNewWorldLineDesc("");
                                 }}
-                                className="flex-1 py-2 px-4 bg-[var(--c-input)] text-[var(--c-text-title)] rounded-lg ts-14 font-medium hover:opacity-80"
+                                className="flex-1 py-2.5 px-4 bg-[var(--c-input)] text-[var(--c-text-title)] rounded-lg ts-14 font-semibold"
                                 type="button"
                             >
                                 取消
@@ -284,7 +289,12 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
                             <button
                                 onClick={handleCreate}
                                 disabled={!newWorldLineName.trim()}
-                                className="flex-1 py-2 px-4 bg-[var(--c-primary)] text-white rounded-lg ts-14 font-medium hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 py-2.5 px-4 rounded-lg ts-14 font-semibold disabled:cursor-not-allowed"
+                                style={{
+                                    backgroundColor: newWorldLineName.trim() ? 'var(--c-primary)' : 'rgba(var(--c-primary-rgb, 59, 130, 246), 0.5)',
+                                    color: 'white',
+                                    opacity: 1
+                                }}
                                 type="button"
                             >
                                 创建
@@ -296,9 +306,14 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
 
             {/* 编辑世界线弹窗 */}
             {showEditModal && editingWorldLine && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => setShowEditModal(false)}>
+                <div 
+                    className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-[9999] flex items-center justify-center px-4"
+                    style={{ margin: 0 }}
+                    onClick={() => setShowEditModal(false)}
+                >
                     <div 
                         className="bg-[var(--c-surface)] rounded-xl w-full max-w-[400px] p-6 shadow-xl"
+                        style={{ maxHeight: '80vh', overflowY: 'auto' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="ts-18 font-bold text-[var(--c-text-title)] mb-4">编辑世界线</h3>
@@ -338,7 +353,7 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
                                     setNewWorldLineName("");
                                     setNewWorldLineDesc("");
                                 }}
-                                className="flex-1 py-2 px-4 bg-[var(--c-input)] text-[var(--c-text-title)] rounded-lg ts-14 font-medium hover:opacity-80"
+                                className="flex-1 py-2.5 px-4 bg-[var(--c-input)] text-[var(--c-text-title)] rounded-lg ts-14 font-semibold"
                                 type="button"
                             >
                                 取消
@@ -346,7 +361,12 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
                             <button
                                 onClick={handleUpdateWorldLine}
                                 disabled={!newWorldLineName.trim()}
-                                className="flex-1 py-2 px-4 bg-[var(--c-primary)] text-white rounded-lg ts-14 font-medium hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 py-2.5 px-4 rounded-lg ts-14 font-semibold disabled:cursor-not-allowed"
+                                style={{
+                                    backgroundColor: newWorldLineName.trim() ? 'var(--c-primary)' : 'rgba(var(--c-primary-rgb, 59, 130, 246), 0.5)',
+                                    color: 'white',
+                                    opacity: 1
+                                }}
                                 type="button"
                             >
                                 保存
