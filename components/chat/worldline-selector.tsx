@@ -63,15 +63,15 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
         setIdentity(resolveUserIdentity());
     };
 
-    const handleSwitch = (worldLineId: string) => {
+    const handleSwitch = async (worldLineId: string) => {
         if (worldLineId === activeWorldLineId) {
             setIsOpen(false);
             return;
         }
         switchWorldLine(worldLineId);
         setIsOpen(false);
-        // 重新加载聊天存储，清空缓存并按新世界线过滤
-        reloadChatStorage();
+        // 重新加载聊天存储，从 IndexedDB 加载所有数据
+        await reloadChatStorage();
         loadData();
     };
 

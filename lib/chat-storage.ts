@@ -978,15 +978,22 @@ export function isChatStorageHydrated(): boolean {
 
 /**
  * 重新加载聊天存储（世界线切换时调用）
- * 清空内存缓存，强制从 IndexedDB 重新加载并按当前世界线过滤
+ * 从 IndexedDB 重新加载所有数据到缓存
  */
-export function reloadChatStorage(): void {
+export async function reloadChatStorage(): Promise<void> {
     if (!_hydrated) return;
-    _contactsCache = [];
-    _sessionsCache = [];
-    _messagesCache = [];
-    // 不重置 _hydrated 和 _hydratePromise，避免重复初始化
-    // 直接重新加载会触发世界线过滤
+    
+    try {
+        // 从 IndexedDB 重新加载所有数据（包含所有世界线）
+        const data = await initChatDb();
+        _contactsCache = data.contacts;
+        _sessionsCache = data.sessions;
+        _messagesCache = data.messages;
+        
+        console.log(`[ChatStorage] Reloaded: ${_contactsCache.length} contacts, ${_sessionsCache.length} sessions, ${_messagesCache.length} messages`);
+    } catch (err) {
+        console.error("[ChatStorage] Reload failed:", err);
+    }
 }
 
 function _loadAllMessages(): ChatMessage[] {
