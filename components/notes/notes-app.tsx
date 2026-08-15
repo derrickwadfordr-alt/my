@@ -57,7 +57,10 @@ export function NotesApp({ onClose }: AppComponentProps) {
     setIsEditing(true);
   };
 
-  const deleteNote = (id: string) => {
+  const deleteNote = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     const updated = notes.filter((n) => n.id !== id);
     setNotes(updated);
     saveNotes(updated);
@@ -118,21 +121,61 @@ export function NotesApp({ onClose }: AppComponentProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#f7f7f7]">
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: "#f7f7f7",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
       {/* 顶部导航栏 */}
-      <div className="flex items-center justify-between px-4 h-14 bg-[#ededed] border-b border-[#d0d0d0]">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+          height: "56px",
+          background: "#ededed",
+          borderBottom: "1px solid #d0d0d0",
+        }}
+      >
         {selectedNote && isEditing ? (
           <>
             <button
+              type="button"
               onClick={backToList}
-              className="flex items-center gap-1 text-[#576b95] text-base"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "#576b95",
+                fontSize: "16px",
+                background: "none",
+                border: "none",
+                padding: "8px",
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft style={{ width: "20px", height: "20px" }} />
               <span>备忘录</span>
             </button>
             <button
+              type="button"
               onClick={saveEdit}
-              className="text-[#576b95] text-base font-medium"
+              style={{
+                color: "#576b95",
+                fontSize: "16px",
+                fontWeight: 500,
+                background: "none",
+                border: "none",
+                padding: "8px 12px",
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
             >
               完成
             </button>
@@ -140,81 +183,199 @@ export function NotesApp({ onClose }: AppComponentProps) {
         ) : (
           <>
             <button
+              type="button"
               onClick={onClose}
-              className="flex items-center gap-1 text-[#576b95] text-base"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "#576b95",
+                fontSize: "16px",
+                background: "none",
+                border: "none",
+                padding: "8px",
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft style={{ width: "20px", height: "20px" }} />
               <span>返回</span>
             </button>
-            <span className="text-lg font-medium">备忘录</span>
+            <span style={{ fontSize: "18px", fontWeight: 500 }}>备忘录</span>
             <button
+              type="button"
               onClick={createNote}
-              className="text-[#576b95] flex items-center gap-1"
+              style={{
+                color: "#576b95",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "16px",
+                background: "none",
+                border: "none",
+                padding: "8px",
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
             >
-              <Plus className="w-5 h-5" />
-              <span className="text-base">新建</span>
+              <Plus style={{ width: "20px", height: "20px" }} />
+              <span>新建</span>
             </button>
           </>
         )}
       </div>
 
       {/* 内容区域 */}
-      <div className="flex-1 overflow-y-auto">
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {selectedNote && isEditing ? (
           // 编辑视图
-          <div className="p-4">
+          <div style={{ padding: "16px" }}>
             <input
               type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="标题"
-              className="w-full text-2xl font-bold mb-4 bg-transparent border-none outline-none"
+              style={{
+                width: "100%",
+                fontSize: "24px",
+                fontWeight: "bold",
+                marginBottom: "16px",
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                padding: "4px 0",
+              }}
             />
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               placeholder="内容"
-              className="w-full min-h-[400px] text-base bg-transparent border-none outline-none resize-none"
+              style={{
+                width: "100%",
+                minHeight: "400px",
+                fontSize: "16px",
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                resize: "none",
+                padding: "4px 0",
+                lineHeight: "1.6",
+              }}
             />
           </div>
         ) : notes.length === 0 ? (
           // 空状态
-          <div className="flex flex-col items-center justify-center h-full text-[#999]">
-            <div className="text-6xl mb-4">📝</div>
-            <div className="text-base">还没有备忘录</div>
-            <div className="text-sm mt-2">点击右上角"新建"开始记录</div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              color: "#999",
+            }}
+          >
+            <div style={{ fontSize: "64px", marginBottom: "16px" }}>📝</div>
+            <div style={{ fontSize: "16px" }}>还没有备忘录</div>
+            <div style={{ fontSize: "14px", marginTop: "8px" }}>
+              点击右上角"新建"开始记录
+            </div>
           </div>
         ) : (
           // 列表视图
-          <div className="p-4 space-y-3">
+          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="bg-white rounded-lg p-4 shadow-sm active:bg-[#f0f0f0] transition-colors"
+                style={{
+                  background: "#fff",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                }}
+                onMouseDown={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.background = "#f0f0f0";
+                }}
+                onMouseUp={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.background = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.background = "#fff";
+                }}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                  }}
+                >
                   <div
-                    className="flex-1 cursor-pointer"
+                    style={{ flex: 1, cursor: "pointer" }}
                     onClick={() => openNote(note)}
                   >
-                    <div className="text-base font-medium mb-1 line-clamp-1">
+                    <div
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: 500,
+                        marginBottom: "4px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {note.title}
                     </div>
-                    <div className="text-sm text-[#999] mb-2 line-clamp-2">
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#999",
+                        marginBottom: "8px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: "1.5",
+                      }}
+                    >
                       {note.content || "无内容"}
                     </div>
-                    <div className="text-xs text-[#999]">
+                    <div style={{ fontSize: "12px", color: "#999" }}>
                       {formatDate(note.updatedAt)}
                     </div>
                   </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNote(note.id);
+                    type="button"
+                    onClick={(e) => deleteNote(note.id, e)}
+                    style={{
+                      color: "#999",
+                      background: "none",
+                      border: "none",
+                      padding: "8px",
+                      cursor: "pointer",
+                      WebkitTapHighlightColor: "transparent",
                     }}
-                    className="text-[#999] hover:text-[#f56c6c] p-2"
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = "#f56c6c";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = "#999";
+                    }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
               </div>
