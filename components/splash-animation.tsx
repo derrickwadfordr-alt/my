@@ -11,14 +11,14 @@ const SCRIPT = [
 
 const T = {
   detach: 3480,
-  morph: 3630,
-  rise: 3840,
+  morph: 9999999,
+  rise: 9999999,
   titleStart: 7520,
   tagline: 8520
 };
 
-const KLEIN = "#174BFF";
-const KLEIN_DEEP = "#0B2ED8";
+const KLEIN = "#FEDDDF";
+const KLEIN_DEEP = "#FECCCE";
 const PAPER = "#F1F2F6";
 const INK = "#1A1A1A";
 const FONT_UI = "\"Inter\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", sans-serif";
@@ -139,7 +139,7 @@ export function SplashAnimation() {
         if (this.y < -10) this.reset(false);
       }
       draw() {
-        ctx.fillStyle = this.tone ? `rgba(23,75,255,${this.alpha})` : `rgba(40,40,40,${this.alpha * 0.65})`;
+        ctx.fillStyle = this.tone ? `rgba(254,221,223,${this.alpha})` : `rgba(40,40,40,${this.alpha * 0.65})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
         ctx.fill();
@@ -178,7 +178,7 @@ export function SplashAnimation() {
         this.text = config.text;
         this.idx = idx;
         this.config = config;
-        this.fontSize = Math.max(13, Math.min(16, W * 0.042));
+        this.fontSize = Math.max(11, Math.min(13, W * 0.032));
         this.padX = this.fontSize * 0.86;
         const padY = this.fontSize * 0.52;
         this.textColor = this.side === "left" ? INK : "#FFFFFF";
@@ -427,11 +427,11 @@ export function SplashAnimation() {
         ctx.font = `italic 400 ${this.fontSize}px ${FONT_SERIF}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "rgba(23,75,255,0.09)";
+        ctx.fillStyle = "rgba(254,221,223,0.09)";
         for (const [dx, dy] of [[-1.6, 0], [1.6, 0], [0, -1.6], [0, 1.6], [-1.1, -1.1], [1.1, 1.1], [-1.1, 1.1], [1.1, -1.1]]) {
           ctx.fillText(this.ch, dx, dy);
         }
-        ctx.fillStyle = "rgba(23,75,255,0.42)";
+        ctx.fillStyle = "rgba(254,221,223,0.42)";
         ctx.fillText(this.ch, 0, 0);
         ctx.restore();
       }
@@ -488,8 +488,8 @@ export function SplashAnimation() {
       ctx.fillStyle = PAPER;
       ctx.fillRect(0, 0, W, H);
       const grad = ctx.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, Math.max(W, H) * 0.75);
-      grad.addColorStop(0, "rgba(23,75,255,0)");
-      grad.addColorStop(1, "rgba(23,75,255,0.08)");
+      grad.addColorStop(0, "rgba(254,221,223,0)");
+      grad.addColorStop(1, "rgba(254,221,223,0.08)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
       specks.forEach((s) => { s.update(); s.draw(); });
@@ -503,7 +503,7 @@ export function SplashAnimation() {
         const op = clamp((t - T.tagline) / 900, 0, 0.7);
         const txt = "LE DESTIN  ·  AI";
         const ls = 2.2;
-        ctx.fillStyle = `rgba(23,75,255,${op})`;
+        ctx.fillStyle = `rgba(254,221,223,${op})`;
         ctx.font = `300 10px ${FONT_MONO}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
