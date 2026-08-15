@@ -63,8 +63,22 @@ function buildCalendarTriggerInstruction(ownerName: string, weekDates: string[])
   return [
     `请为${ownerName}生成 ${weekDates[0]} 到 ${weekDates[6]} 这一周的日程安排。`,
     "请参考已有日程，生成这一周的完整日程安排。",
-    "每行一条，格式：YYYY-MM-DD|周几|开始时间|结束时间|地点|emoji|事项。emoji 段填一个最贴合该事项的表情符号。",
-    "作息时间不受限制（早起、夜跑、通宵都可以安排），但每一天最多 5 条日程，宁缺毋滥。",
+    "格式要求：",
+    "1. 大项目（主要安排）：YYYY-MM-DD|周几|开始时间|结束时间|地点|emoji|事项",
+    "2. 子项目（详细拆解）：在大项目下一行，缩进两个空格，格式同上",
+    "3. emoji 段填一个最贴合该事项的表情符号",
+    "",
+    "示例：",
+    "2024-03-15|周五|09:00|12:00|公司|💼|上午工作",
+    "  2024-03-15|周五|09:00|09:30|会议室|📧|查看邮件",
+    "  2024-03-15|周五|09:30|11:00|办公桌|📝|写报告",
+    "  2024-03-15|周五|11:00|12:00|会议室|👥|团队会议",
+    "",
+    "注意：",
+    "- 作息时间不受限制（早起、夜跑、通宵都可以安排）",
+    "- 每一天最多 3-5 个大项目，每个大项目可包含 2-5 个子项目",
+    "- 子项目的时间范围必须在大项目范围内",
+    "- 宁缺毋滥，不要为了凑数而生成无意义的日程",
   ].join("\n");
 }
 
@@ -77,10 +91,7 @@ function stripCodeFences(text: string): string {
 
 function parseScheduleLines(rawText: string, weekStart: string): CalendarScheduleItem[] {
   const weekDates = new Set(getWeekDates(weekStart));
-  const lines = stripCodeFences(rawText)
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean);
+  const lines = stripCodeFences(rawText).split(/\r?\n/);
 
   const parsed: Array<{
     date: string;
@@ -89,13 +100,29 @@ function parseScheduleLines(rawText: string, weekStart: string): CalendarSchedul
     location: string;
     title: string;
     emoji?: string;
+    subItems?: Array<{
+      date: string;
+      startTime: string;
+      endTime: string;
+      location: string;
+      title: string;
+      emoji?: string;
+    }>;
   }> = [];
 
+  let currentParent: typeof parsed[number] | null = null;
+
   for (const rawLine of lines) {
+    if (!rawLine.trim()) continue;
+    
+    // 检测是否为子项目（以空格或制表符开头）
+    const isSubItem = /^[\s\t]{2,}/.test(rawLine);
     const line = rawLine
+      .replace(/^[\s\t]+/, "")
       .replace(/^[-*]\s*/, "")
       .replace(/^\d+[.)、]\s*/, "")
       .trim();
+    
     if (!line.includes("|")) continue;
     const parts = line.split("|").map(part => part.trim());
     if (parts.length < 6) continue;
@@ -124,14 +151,30 @@ function parseScheduleLines(rawText: string, weekStart: string): CalendarSchedul
     }
     if (!title.trim()) continue;
 
-    parsed.push({
+    const itemData = {
       date,
       startTime,
       endTime,
       location,
       title,
       emoji,
-    });
+    };
+
+    if (isSubItem && currentParent) {
+      // 这是子项目，加到当前父项目下
+      if (!currentParent.subItems) {
+        currentParent.subItems = [];
+      }
+      currentParent.subItems.push(itemData);
+    } else {
+      // 这是大项目（父项目）
+      const parentItem = {
+        ...itemData,
+        subItems: [],
+      };
+      parsed.push(parentItem);
+      currentParent = parentItem;
+    }
   }
 
   return normalizeGeneratedScheduleItems(parsed);

@@ -24,6 +24,10 @@ export type CalendarScheduleItem = {
   source: "manual" | "generated";
   createdAt: string;
   updatedAt: string;
+  /** 父项目 ID（如果是子项目） */
+  parentId?: string;
+  /** 子项目列表（如果是大项目） */
+  subItems?: CalendarScheduleItem[];
 };
 
 export type CalendarWeekPlan = {

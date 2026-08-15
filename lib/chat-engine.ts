@@ -2268,6 +2268,14 @@ export async function generateChatCompletion(
 ): Promise<ChatCompletionResult> {
     const { llmMessages, character, config, preset, regexes, userIdentity, toolsEnabled } = await buildChatPromptMessages(session, history, options);
     const requestAppTags = mergeAppTags(options?.appTags, options?.promptProfile?.appTags, options?.appId ?? "chat");
+    
+    // ── 每天第一句话自动生成日程 ──
+    if (!session.isGroup && session.contactId && history.length > 0) {
+        const { tryGenerateDailyScheduleOnFirstMessage } = await import("./auto-daily-schedule");
+        void tryGenerateDailyScheduleOnFirstMessage(session.contactId).catch(err => {
+            console.warn("[ChatEngine] Daily schedule generation failed:", err);
+        });
+    }
 
     if (toolsEnabled && nativeToolProtocolForConfig(config) && getEnabledTools(options?.appId ?? "chat").length > 0) {
         return generateNativeChatCompletion({

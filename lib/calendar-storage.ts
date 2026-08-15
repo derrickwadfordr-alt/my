@@ -193,6 +193,8 @@ export function upsertCalendarScheduleItem(
     source: item.source,
     createdAt: item.createdAt ?? now,
     updatedAt: now,
+    parentId: item.parentId,
+    subItems: item.subItems || [],
   };
   const nextItems = existingItems.filter(entry => entry.id !== normalized.id);
   nextItems.push(normalized);
@@ -322,27 +324,67 @@ export function normalizeGeneratedScheduleItems(
     title: string;
     emoji?: string;
     colorKey?: CalendarColorKey;
+    parentId?: string;
+    subItems?: Array<{
+      date: string;
+      startTime: string;
+      endTime: string;
+      location: string;
+      title: string;
+      emoji?: string;
+    }>;
   }>,
 ): CalendarScheduleItem[] {
   const now = new Date().toISOString();
-  return sortScheduleItems(
-    rawItems
-      .map(item => ({
-        id: `calendar_item_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        date: item.date,
-        weekday: getWeekdayLabel(item.date),
-        startTime: normalizeTime(item.startTime) || item.startTime,
-        endTime: normalizeTime(item.endTime) || item.endTime,
-        location: item.location.trim(),
-        title: item.title.trim(),
-        emoji: sanitizeScheduleEmoji(item.emoji),
-        colorKey: isCalendarColorKey(item.colorKey) ? item.colorKey : pickScheduleColorKey(item.startTime),
-        source: "generated" as const,
-        createdAt: now,
-        updatedAt: now,
-      }))
-      .filter(item => isCalendarTimeRangeAllowed(item.startTime, item.endTime)),
-  );
+  const allItems: CalendarScheduleItem[] = [];
+  
+  for (const item of rawItems) {
+    const parentId = `calendar_item_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const parentItem: CalendarScheduleItem = {
+      id: parentId,
+      date: item.date,
+      weekday: getWeekdayLabel(item.date),
+      startTime: normalizeTime(item.startTime) || item.startTime,
+      endTime: normalizeTime(item.endTime) || item.endTime,
+      location: item.location.trim(),
+      title: item.title.trim(),
+      emoji: sanitizeScheduleEmoji(item.emoji),
+      colorKey: isCalendarColorKey(item.colorKey) ? item.colorKey : pickScheduleColorKey(item.startTime),
+      source: "generated" as const,
+      createdAt: now,
+      updatedAt: now,
+      subItems: [],
+    };
+    
+    if (item.subItems && item.subItems.length > 0) {
+      for (const sub of item.subItems) {
+        const subItem: CalendarScheduleItem = {
+          id: `calendar_item_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          date: sub.date,
+          weekday: getWeekdayLabel(sub.date),
+          startTime: normalizeTime(sub.startTime) || sub.startTime,
+          endTime: normalizeTime(sub.endTime) || sub.endTime,
+          location: sub.location.trim(),
+          title: sub.title.trim(),
+          emoji: sanitizeScheduleEmoji(sub.emoji),
+          colorKey: parentItem.colorKey,
+          source: "generated" as const,
+          createdAt: now,
+          updatedAt: now,
+          parentId: parentId,
+        };
+        if (isCalendarTimeRangeAllowed(subItem.startTime, subItem.endTime)) {
+          parentItem.subItems!.push(subItem);
+        }
+      }
+    }
+    
+    if (isCalendarTimeRangeAllowed(parentItem.startTime, parentItem.endTime)) {
+      allItems.push(parentItem);
+    }
+  }
+  
+  return sortScheduleItems(allItems);
 }
 
 export function cloneWeekPlanWithManualEdits(
