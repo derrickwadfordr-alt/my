@@ -5,16 +5,12 @@
 
 export type PhoneCheckAction =
   | { type: "swipe"; direction: "left" | "right" | "up" | "down" }
-  | { type: "openApp"; appId: string } // 可以打开任何应用：music、game、diary 等
+  | { type: "openApp"; appId: string }
   | { type: "openChat"; contactId: string }
   | { type: "openNotes" }
   | { type: "typeInNotes"; content: string }
   | { type: "sendMessage"; contactId: string; content: string }
-  | { type: "playMusic"; songId?: string } // 播放音乐
-  | { type: "playGame"; gameId?: string } // 打开游戏
   | { type: "wait"; ms: number }
-  | { type: "grantControl" } // 释放控制权给用户
-  | { type: "revokeControl" } // 重新接管控制权
   | { type: "exit" };
 
 export interface PhoneCheckSession {
