@@ -6959,9 +6959,11 @@
 }
 
 /* ---------- 6. 气泡尖角 ---------- */
-/* 对方尖角（左侧） - 保持左上角尖角，左下角改圆角 */
+/* 对方尖角（左侧） - 左上角有尖角 */
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"]:not([data-consecutive]) .chat-bubble-role-assistant {
   border-top-left-radius: 4px !important;
+  border-top-right-radius: 18px !important;
+  border-bottom-right-radius: 18px !important;
   border-bottom-left-radius: 18px !important;
 }
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"]:not([data-consecutive]) .chat-bubble-role-assistant::after {
@@ -6978,9 +6980,11 @@
   z-index: 10 !important;
 }
 
-/* 我方尖角（右侧） - 保持右上角尖角，右下角改圆角 */
+/* 我方尖角（右侧） - 右上角有尖角 */
 .chat-room-wrapper .chat-msg-wrapper[data-role="user"]:not([data-consecutive]) .chat-bubble-role-user {
+  border-top-left-radius: 18px !important;
   border-top-right-radius: 4px !important;
+  border-bottom-left-radius: 18px !important;
   border-bottom-right-radius: 18px !important;
 }
 .chat-room-wrapper .chat-msg-wrapper[data-role="user"]:not([data-consecutive]) .chat-bubble-role-user::after {

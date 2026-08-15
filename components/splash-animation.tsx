@@ -3,10 +3,10 @@
 import { useLayoutEffect, useRef } from "react";
 
 const SCRIPT = [
-  { side: "right", text: "Pendant ces sept ans, je n'ai pas cessé une seule seconde de penser à te tuer.", start: 80, type: 0 },
-  { side: "left", text: "Et je te déteste aussi, plus que tout.", start: 560, type: 310 },
-  { side: "right", text: "Ça veut dire que toi aussi, tu as pensé à moi tout ce temps ?", start: 1540, type: 0 },
-  { side: "left", text: "Mhm.", start: 2140, type: 340 }
+  { side: "left", text: "Pendant ces sept ans, je n'ai pas cessé une seule seconde de penser à te tuer.", start: 80, type: 0 },
+  { side: "right", text: "Et je te déteste aussi, plus que tout.", start: 560, type: 310 },
+  { side: "left", text: "Ça veut dire que toi aussi, tu as pensé à moi tout ce temps ?", start: 1540, type: 0 },
+  { side: "right", text: "Mhm.", start: 2140, type: 340 }
 ] as const;
 
 const T = {
@@ -181,12 +181,31 @@ export function SplashAnimation() {
         this.fontSize = Math.max(12, Math.min(15, W * 0.038));
         this.padX = this.fontSize * 0.86;
         const padY = this.fontSize * 0.52;
-        this.textColor = this.side === "left" ? INK : "#FFFFFF";
-        this.detachColor = this.side === "left" ? INK : KLEIN_DEEP;
+        this.textColor = this.side === "left" ? "#FFFFFF" : INK;
+        this.detachColor = this.side === "left" ? KLEIN_DEEP : INK;
         ctx.font = `300 ${this.fontSize}px ${FONT_UI}`;
-        this.textW = ctx.measureText(this.text).width;
+        
+        // 自动换行：超过最大宽度就分行
+        const maxLineWidth = W * 0.78;
+        const words = this.text.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+        
+        for (const word of words) {
+          const testLine = currentLine ? currentLine + ' ' + word : word;
+          const testWidth = ctx.measureText(testLine).width;
+          if (testWidth > maxLineWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+        
+        this.textW = Math.max(...lines.map(line => ctx.measureText(line).width));
         this.w = this.textW + this.padX * 2;
-        this.h = this.fontSize * 1.7 + padY * 0.4;
+        this.h = this.fontSize * 1.7 * lines.length + padY * 0.4;
         const margin = W * 0.07;
         this.chatBaseY = H * 0.61;
         this.yStep = H * 0.072;
@@ -246,8 +265,8 @@ export function SplashAnimation() {
         const radius = lerp(this.h / 2, Math.min(sw, sh) * 0.46, m);
         const softEdge = Math.pow(1 - clamp(m / 0.72, 0, 1), 1.8);
         if (softEdge > 0.01) {
-          ctx.shadowColor = this.side === "left" ? `rgba(255,255,255,${0.68 * softEdge})` : `rgba(26,60,240,${0.24 * softEdge})`;
-          ctx.shadowBlur = this.side === "left" ? 10 * softEdge : 14 * softEdge;
+          ctx.shadowColor = this.side === "left" ? `rgba(254,221,223,${0.24 * softEdge})` : `rgba(255,255,255,${0.68 * softEdge})`;
+          ctx.shadowBlur = this.side === "left" ? 14 * softEdge : 10 * softEdge;
         }
         const drawBubbleShape = () => {
           if (m < 0.985) drawPillPath(ctx, -sw / 2, -sh / 2, sw, sh, radius);
@@ -260,7 +279,7 @@ export function SplashAnimation() {
             drawBalloonPath(ctx, 0, 0, sw + expand * 2, sh + expand * 2, Math.sin(this.swayPhase + this.idx));
           }
         };
-        const fillColor = this.side === "right" ? KLEIN : "#FFFFFF";
+        const fillColor = this.side === "left" ? KLEIN : "#FFFFFF";
         ctx.fillStyle = fillColor;
         const edgeBlur = 2.4 * softEdge;
         if (edgeBlur > 0.06 && useSoftEdgeFallback) {
@@ -288,7 +307,7 @@ export function SplashAnimation() {
         }
         ctx.shadowColor = "transparent";
         if (m > 0.3) {
-          ctx.globalAlpha = ((m - 0.3) / 0.7) * (this.side === "left" ? 0.55 : 0.5);
+          ctx.globalAlpha = ((m - 0.3) / 0.7) * (this.side === "left" ? 0.5 : 0.55);
           ctx.fillStyle = "#FFFFFF";
           ctx.beginPath();
           ctx.ellipse(-sw * 0.23, -sh * 0.31, sw * 0.085, sh * 0.13, 0.48, 0, Math.PI * 2);
@@ -297,7 +316,7 @@ export function SplashAnimation() {
         }
         if (m > 0.55) {
           ctx.globalAlpha = (m - 0.55) / 0.45;
-          ctx.fillStyle = this.side === "right" ? KLEIN_DEEP : "#E8E5DD";
+          ctx.fillStyle = this.side === "left" ? KLEIN_DEEP : "#E8E5DD";
           ctx.beginPath();
           const ny = sh / 2;
           ctx.moveTo(-3.5, ny - 1);
@@ -313,7 +332,7 @@ export function SplashAnimation() {
           const len = (108 + this.idx * 6) * sa;
           const sw1 = Math.sin(this.swayPhase * 1.4) * 9;
           const sw2 = Math.sin(this.swayPhase * 1.4 + 1) * 7;
-          ctx.strokeStyle = this.side === "left" ? "rgba(120,120,120,0.7)" : "rgba(0,20,168,0.85)";
+          ctx.strokeStyle = this.side === "left" ? "rgba(254,221,223,0.85)" : "rgba(120,120,120,0.7)";
           ctx.lineWidth = 0.9;
           ctx.beginPath();
           ctx.moveTo(0, sh / 2 + 4);
@@ -321,7 +340,7 @@ export function SplashAnimation() {
           ctx.stroke();
         }
         if (!this.charsOut) {
-          if (this.showTyping) drawTypingDots(t, this.side === "left" ? "rgba(120,120,120,0.85)" : "rgba(255,255,255,0.85)");
+          if (this.showTyping) drawTypingDots(t, this.side === "left" ? "rgba(255,255,255,0.85)" : "rgba(120,120,120,0.85)");
           else if (this.showText) {
             ctx.fillStyle = this.textColor;
             ctx.font = `300 ${this.fontSize}px ${FONT_UI}`;
