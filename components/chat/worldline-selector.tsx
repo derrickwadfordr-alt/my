@@ -235,9 +235,9 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
 
             {/* 新建世界线弹窗 */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setShowCreateModal(false)}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => setShowCreateModal(false)}>
                     <div 
-                        className="bg-[var(--c-surface)] rounded-xl w-[90%] max-w-[400px] p-6 shadow-xl"
+                        className="bg-[var(--c-surface)] rounded-xl w-full max-w-[400px] p-6 shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="ts-18 font-bold text-[var(--c-text-title)] mb-4">新建世界线</h3>
@@ -296,9 +296,9 @@ export function WorldLineSelector({ onWorldLineChange }: WorldLineSelectorProps)
 
             {/* 编辑世界线弹窗 */}
             {showEditModal && editingWorldLine && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setShowEditModal(false)}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => setShowEditModal(false)}>
                     <div 
-                        className="bg-[var(--c-surface)] rounded-xl w-[90%] max-w-[400px] p-6 shadow-xl"
+                        className="bg-[var(--c-surface)] rounded-xl w-full max-w-[400px] p-6 shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="ts-18 font-bold text-[var(--c-text-title)] mb-4">编辑世界线</h3>
