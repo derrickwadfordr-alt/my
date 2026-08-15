@@ -2,8 +2,8 @@ import { kvGet, kvSet, registerKvMigration } from "./kv-db";
 import { MASCOT_PERSONA } from "./mascot-prompts";
 
 export const MASCOT_SETTINGS_KEY = "ai_phone_mascot_settings_v1";
-export const DEFAULT_MASCOT_DISPLAY_NAME = "AI助手";
-export const DEFAULT_MASCOT_AVATAR = "/mascot.png";
+export const DEFAULT_MASCOT_DISPLAY_NAME = "dazai";
+export const DEFAULT_MASCOT_AVATAR = "https://img.baidu.re/i/2026/03/3mf3r2.jpg";
 
 export type MascotSettings = {
     nickname: string;

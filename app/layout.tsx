@@ -17,8 +17,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "float",
-  description: "float",
+  title: "le destin",
+  description: "le destin",
 };
 
 export default function RootLayout({
@@ -31,10 +31,10 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#f8f7f2" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <link rel="icon" href="/icon-192.png" type="image/png" />
+        <link rel="apple-touch-icon" href="https://img.baidu.re/i/2026/08/i8cugr.jpg" />
+        <link rel="icon" href="https://img.baidu.re/i/2026/08/i8cugr.jpg" type="image/jpeg" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="float" />
+        <meta name="apple-mobile-web-app-title" content="le destin" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

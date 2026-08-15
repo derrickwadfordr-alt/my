@@ -3,10 +3,10 @@
 import { useLayoutEffect, useRef } from "react";
 
 const SCRIPT = [
-  { side: "right", text: "you ever zone out mid-toast?", start: 80, type: 0 },
-  { side: "left", text: "the bread became a small sunset.", start: 560, type: 310 },
-  { side: "right", text: "beautiful. also concerning.", start: 1540, type: 0 },
-  { side: "left", text: "let it float until it remembers.", start: 2140, type: 340 }
+  { side: "right", text: "Pendant ces sept ans, je n'ai pas cessé une seule seconde de penser à te tuer.", start: 80, type: 0 },
+  { side: "left", text: "Et je te déteste aussi, plus que tout.", start: 560, type: 310 },
+  { side: "right", text: "Ça veut dire que toi aussi, tu as pensé à moi tout ce temps ?", start: 1540, type: 0 },
+  { side: "left", text: "Mhm.", start: 2140, type: 340 }
 ] as const;
 
 const T = {
@@ -451,7 +451,7 @@ export function SplashAnimation() {
       titles = [];
       titleFontSize = Math.max(54, Math.min(96, W * 0.22));
       ctx.font = `italic 400 ${titleFontSize}px ${FONT_SERIF}`;
-      const word = "float";
+      const word = "le destin";
       const widths = [...word].map((c) => ctx.measureText(c).width);
       const spacing = titleFontSize * 0.04;
       let total = widths.reduce((sum, width) => sum + width, 0) + spacing * (word.length - 1);
@@ -501,7 +501,7 @@ export function SplashAnimation() {
       titles.forEach((tl) => { tl.update(t); tl.draw(); });
       if (t > T.tagline) {
         const op = clamp((t - T.tagline) / 900, 0, 0.7);
-        const txt = "WEIGHTLESS  ·  AI";
+        const txt = "LE DESTIN  ·  AI";
         const ls = 2.2;
         ctx.fillStyle = `rgba(23,75,255,${op})`;
         ctx.font = `300 10px ${FONT_MONO}`;
@@ -562,8 +562,8 @@ export function SplashAnimation() {
     <div ref={stageRef} className="splash-animation-stage" aria-hidden>
       <canvas ref={canvasRef} className="splash-animation-canvas" />
       <div className="splash-animation-grain" />
-      <div className="splash-animation-corner">float / 0.1</div>
-      <div className="splash-animation-corner splash-animation-corner-right">no.001</div>
+      <div className="splash-animation-corner">le destin</div>
+      <div className="splash-animation-corner splash-animation-corner-right">soukoku</div>
     </div>
   );
 }

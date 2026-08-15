@@ -1,7 +1,7 @@
 {
-    "name": "float",
-    "short_name": "float",
-    "description": "float",
+    "name": "le destin",
+    "short_name": "le destin",
+    "description": "le destin",
     "id": "/",
     "start_url": "/",
     "scope": "/",
@@ -20,15 +20,9 @@
     ],
     "icons": [
         {
-            "src": "/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/icon-512.png",
+            "src": "https://img.baidu.re/i/2026/08/i8cugr.jpg",
             "sizes": "512x512",
-            "type": "image/png",
+            "type": "image/jpeg",
             "purpose": "any"
         }
     ]
