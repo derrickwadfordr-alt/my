@@ -20,6 +20,20 @@ export interface PhoneCheckSession {
   actions: PhoneCheckAction[];
   currentActionIndex: number;
   isActive: boolean;
+  /** 是否暂时释放控制权给用户 */
+  userControlGranted: boolean;
+  /** 用户在控制期间的操作记录 */
+  userActions: UserAction[];
+}
+
+export interface UserAction {
+  type: "type" | "navigate" | "send_message" | "other";
+  timestamp: number;
+  data: {
+    content?: string;
+    location?: string;
+    contactId?: string;
+  };
 }
 
 let currentSession: PhoneCheckSession | null = null;
@@ -34,9 +48,45 @@ export function startPhoneCheckMode(characterId: string, characterName: string):
     actions: [],
     currentActionIndex: 0,
     isActive: true,
+    userControlGranted: false,
+    userActions: [],
   };
   notifyListeners();
   return sessionId;
+}
+
+/** AI 释放控制权给用户 */
+export function grantUserControl(): void {
+  if (!currentSession) return;
+  currentSession.userControlGranted = true;
+  currentSession.userActions = [];
+  notifyListeners();
+}
+
+/** AI 重新接管控制权 */
+export function revokeUserControl(): void {
+  if (!currentSession) return;
+  currentSession.userControlGranted = false;
+  notifyListeners();
+}
+
+/** 记录用户在控制期间的操作 */
+export function recordUserAction(action: UserAction): void {
+  if (!currentSession || !currentSession.userControlGranted) return;
+  currentSession.userActions.push(action);
+  notifyListeners();
+}
+
+/** 获取用户操作记录（供 AI 工具读取） */
+export function getUserActions(): UserAction[] {
+  return currentSession?.userActions ?? [];
+}
+
+/** 清空用户操作记录 */
+export function clearUserActions(): void {
+  if (!currentSession) return;
+  currentSession.userActions = [];
+  notifyListeners();
 }
 
 export function addPhoneCheckAction(action: PhoneCheckAction): void {

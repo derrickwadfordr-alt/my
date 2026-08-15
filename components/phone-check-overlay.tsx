@@ -7,6 +7,7 @@ import {
   subscribePhoneCheckMode,
   exitPhoneCheckMode,
   executeNextAction,
+  recordUserAction,
   type PhoneCheckAction,
 } from "@/lib/phone-check-mode";
 
@@ -119,24 +120,70 @@ export function PhoneCheckOverlay({
     };
   }, []);
 
+  // 监听用户在控制期间的操作
+  useEffect(() => {
+    if (!session?.userControlGranted) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key.length === 1) {
+        recordUserAction({
+          type: "type",
+          timestamp: Date.now(),
+          data: { content: e.key },
+        });
+      }
+    };
+
+    const handleNavigation = () => {
+      recordUserAction({
+        type: "navigate",
+        timestamp: Date.now(),
+        data: { location: window.location.pathname },
+      });
+    };
+
+    window.addEventListener("keypress", handleKeyPress);
+    window.addEventListener("popstate", handleNavigation);
+
+    return () => {
+      window.removeEventListener("keypress", handleKeyPress);
+      window.removeEventListener("popstate", handleNavigation);
+    };
+  }, [session?.userControlGranted]);
+
   if (!session?.isActive) return null;
+
+  const isUserControl = session.userControlGranted;
 
   return (
     <>
-      {/* 半透明遮罩 - 禁用用户操作 */}
-      <div
-        className="fixed inset-0 z-[9999] bg-black/20 pointer-events-auto"
-        style={{ touchAction: "none" }}
-      />
+      {/* 半透明遮罩 - 只在 AI 控制时禁用用户操作 */}
+      {!isUserControl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/20 pointer-events-auto"
+          style={{ touchAction: "none" }}
+        />
+      )}
 
       {/* 顶部提示条 */}
       <div className="fixed top-0 left-0 right-0 z-[10000] bg-gradient-to-b from-black/60 to-transparent pt-safe">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2 text-white">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium">
-              {session.characterName} 正在查看你的手机
-            </span>
+            {isUserControl ? (
+              <>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium">
+                  {session.characterName} 放开了控制权
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium">
+                  {session.characterName} 正在查看你的手机
+                </span>
+              </>
+            )}
           </div>
           <button
             onClick={handleForceExit}

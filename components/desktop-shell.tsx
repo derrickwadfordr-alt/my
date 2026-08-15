@@ -85,7 +85,12 @@ import {
 import { CustomAppGlyph, IconGlyph } from "@/components/icon-glyph";
 import { DesktopCustomizer } from "@/components/desktop-customizer";
 import { PhoneCheckOverlay } from "@/components/phone-check-overlay";
-import { isPhoneCheckModeActive, subscribePhoneCheckMode } from "@/lib/phone-check-mode";
+import { 
+  isPhoneCheckModeActive, 
+  subscribePhoneCheckMode,
+  getCurrentPhoneCheckSession,
+  recordUserAction,
+} from "@/lib/phone-check-mode";
 import {
   collectThemeAssetIds,
   getThemeAssetMap,

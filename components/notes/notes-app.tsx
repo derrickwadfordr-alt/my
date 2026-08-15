@@ -139,6 +139,13 @@ export function NotesApp({ onClose }: AppComponentProps) {
           </>
         ) : (
           <>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1 text-[#576b95] text-base"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>返回</span>
+            </button>
             <span className="text-lg font-medium">备忘录</span>
             <button
               onClick={createNote}
