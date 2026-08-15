@@ -34,6 +34,7 @@ export function PhoneCheckOverlay({
     return unsubscribe;
   }, []);
 
+  // 只在 session 首次激活时启动动作序列
   useEffect(() => {
     if (!session?.isActive) {
       setCurrentAction(null);
@@ -41,9 +42,12 @@ export function PhoneCheckOverlay({
       return;
     }
 
-    // 开始执行动作序列
-    executeActionSequence();
-  }, [session]);
+    // 只在动作序列未开始时启动
+    if (session.currentActionIndex === 0 && session.actions.length > 0) {
+      executeActionSequence();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.isActive]);
 
   const executeActionSequence = async () => {
     if (!session?.isActive) return;
@@ -96,6 +100,32 @@ export function PhoneCheckOverlay({
       case "sendMessage":
         if (onSendMessage) onSendMessage(action.contactId, action.content);
         await new Promise((resolve) => setTimeout(resolve, 1000));
+        break;
+
+      case "playMusic":
+        // 打开音乐应用（可以指定歌曲 ID）
+        if (onOpenApp) onOpenApp("music");
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        // TODO: 如果提供了 songId，触发播放指定歌曲
+        break;
+
+      case "playGame":
+        // 打开游戏应用（可以指定游戏 ID）
+        if (onOpenApp) onOpenApp("game");
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        // TODO: 如果提供了 gameId，打开指定游戏
+        break;
+
+      case "grantControl":
+        // AI 释放控制权
+        const { grantUserControl } = await import("@/lib/phone-check-mode");
+        grantUserControl();
+        break;
+
+      case "revokeControl":
+        // AI 重新接管控制权
+        const { revokeUserControl } = await import("@/lib/phone-check-mode");
+        revokeUserControl();
         break;
 
       case "wait":
@@ -218,6 +248,14 @@ function getActionDescription(action: PhoneCheckAction): string {
       return "正在输入...";
     case "sendMessage":
       return "发送消息";
+    case "playMusic":
+      return "播放音乐";
+    case "playGame":
+      return "打开游戏";
+    case "grantControl":
+      return "松开控制权";
+    case "revokeControl":
+      return "重新接管";
     case "wait":
       return "查看中...";
     case "exit":
