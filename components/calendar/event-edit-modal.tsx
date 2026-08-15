@@ -124,6 +124,8 @@ export function CalendarEventEditModal({
             />
           </div>
 
+          {/* TODO: 子项目编辑（嵌套日程）- 暂时隐藏，点击主项目时可以看到子项目数量 */}
+
           <div className="flex flex-col gap-1">
             <label className="menu-desc ml-1">图标（点选，再点一次取消）</label>
             <div className="calendar-emoji-row">

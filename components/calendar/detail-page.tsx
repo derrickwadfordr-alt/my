@@ -415,36 +415,47 @@ export function CalendarDetailPage({
             style={{ "--tl-day-w": `${100 / daysPerPage}%` } as CSSProperties}
           >
             {days.map(iso => {
-              const positioned = layoutDayEvents(itemsByDate.get(iso) ?? []);
+              const allItems = itemsByDate.get(iso) ?? [];
+              // 只显示顶级项目（没有 parentId 的）
+              const topLevelItems = allItems.filter(item => !item.parentId);
+              const positioned = layoutDayEvents(topLevelItems);
               return (
                 <div key={iso} className="calendar-tl-day" data-today={iso === todayIso ? "true" : undefined}>
                   <div className="calendar-tl-body">
                     {iso === todayIso ? (
                       <i className="calendar-now-line" style={{ top: `${nowTop}px` }} aria-hidden="true" />
                     ) : null}
-                    {positioned.map(pos => (
-                      <button
-                        key={pos.item.id}
-                        type="button"
-                        className="calendar-tl-event"
-                        data-color={pos.item.colorKey}
-                        style={{
-                          top: `${pos.top}px`,
-                          height: `${pos.height}px`,
-                          left: `calc(${pos.left}% + 3px)`,
-                          width: `calc(${pos.width}% - 6px)`,
-                        }}
-                        onClick={() => onEditItem(pos.item)}
-                        aria-label={`${pos.item.startTime} ${pos.item.title}`}
-                      >
-                        <b>{pos.item.emoji ? `${pos.item.emoji} ` : ""}{pos.item.title}</b>
-                        <span>
-                          {pos.item.startTime}–{pos.item.endTime}
-                          {pos.item.location ? ` · ${pos.item.location}` : ""}
-                          {pos.item.source === "generated" ? " · AI" : ""}
-                        </span>
-                      </button>
-                    ))}
+                    {positioned.map(pos => {
+                      const hasSubItems = pos.item.subItems && pos.item.subItems.length > 0;
+                      return (
+                        <button
+                          key={pos.item.id}
+                          type="button"
+                          className="calendar-tl-event"
+                          data-color={pos.item.colorKey}
+                          data-has-subitems={hasSubItems ? "true" : undefined}
+                          style={{
+                            top: `${pos.top}px`,
+                            height: `${pos.height}px`,
+                            left: `calc(${pos.left}% + 3px)`,
+                            width: `calc(${pos.width}% - 6px)`,
+                          }}
+                          onClick={() => onEditItem(pos.item)}
+                          aria-label={`${pos.item.startTime} ${pos.item.title}${hasSubItems ? `（${pos.item.subItems!.length}项）` : ""}`}
+                        >
+                          <b>
+                            {pos.item.emoji ? `${pos.item.emoji} ` : ""}
+                            {pos.item.title}
+                            {hasSubItems ? ` (${pos.item.subItems!.length})` : ""}
+                          </b>
+                          <span>
+                            {pos.item.startTime}–{pos.item.endTime}
+                            {pos.item.location ? ` · ${pos.item.location}` : ""}
+                            {pos.item.source === "generated" ? " · AI" : ""}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );
