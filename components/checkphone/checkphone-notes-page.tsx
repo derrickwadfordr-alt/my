@@ -1,107 +1,67 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useCheckPhoneRefresh } from "@/lib/checkphone-refresh-tracker";
-import { ChevronLeft, RefreshCw, Trash2 } from "lucide-react";
-import { CheckPhoneBilingualText } from "@/components/checkphone/checkphone-bilingual-text";
-import { CheckPhoneDebugErrorCard } from "@/components/checkphone/checkphone-debug-error-card";
-import { ConfirmDialog } from "@/components/ui";
+import { useEffect, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import type { Character } from "@/lib/character-types";
-import type {
-  CheckPhoneNotesPayload,
-  CheckPhoneSnapshot,
-} from "@/lib/checkphone-config";
-import { generateCheckPhoneNotes } from "@/lib/checkphone-engine";
-import {
-  clearPhoneSnapshot,
-  loadPhoneSnapshot,
-  savePhoneSnapshot,
-} from "@/lib/checkphone-storage";
 
 type CheckPhoneNotesPageProps = {
   character: Character;
   onBack: () => void;
 };
 
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+const STORAGE_KEY = "ai_phone_notes";
+
+function loadNotes(): Note[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CheckPhoneNotesPage({
   character,
   onBack,
 }: CheckPhoneNotesPageProps) {
-  const [snapshot, setSnapshot] =
-    useState<CheckPhoneSnapshot<CheckPhoneNotesPayload> | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [loading, setLoading] = useCheckPhoneRefresh(character.id, "notes", setSnapshot);
-  const [error, setError] = useState<string | null>(null);
-  const [debugRawOutput, setDebugRawOutput] = useState<string | null>(null);
-  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoaded(false);
-    setError(null);
-    setDebugRawOutput(null);
-    setSnapshot(null);
-    (async () => {
-      const cached = await loadPhoneSnapshot<CheckPhoneNotesPayload>(
-        character.id,
-        "notes",
-      );
-      if (cancelled) return;
-      setSnapshot(cached);
-      setLoaded(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [character.id]);
-
-  async function handleRefresh() {
-    if (loading) return;
-    setLoading(true);
-    setError(null);
-    setDebugRawOutput(null);
-    const {
-      payload,
-      summary,
-      error: nextError,
-      debugRawOutput: nextDebugRawOutput,
-    } = await generateCheckPhoneNotes(
-      character.id,
-      snapshot?.payload ?? null,
-      snapshot?.updatedAt,
-    );
-    if (payload) {
-      const now = new Date().toISOString();
-      const nextSnapshot: CheckPhoneSnapshot<CheckPhoneNotesPayload> = {
-        id: `${character.id}:notes`,
-        characterId: character.id,
-        appId: "notes",
-        generatedAt: snapshot?.generatedAt ?? now,
-        updatedAt: now,
-        summary,
-        payload,
-      };
-      await savePhoneSnapshot(nextSnapshot);
-      setSnapshot(nextSnapshot);
-    }
-    setError(nextError ?? null);
-    setDebugRawOutput(nextDebugRawOutput ?? null);
-    setLoading(false);
+    setNotes(loadNotes());
     setLoaded(true);
-  }
+  }, []);
 
-  async function handleClear() {
-    if (loading) return;
-    await clearPhoneSnapshot(character.id, "notes");
-    setSnapshot(null);
-    setError(null);
-    setDebugRawOutput(null);
-    setLoaded(true);
-    setConfirmClearOpen(false);
-  }
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const isYesterday =
+      new Date(now.getTime() - 86400000).toDateString() === date.toDateString();
 
-  const payload = snapshot?.payload ?? null;
-  const notes = useMemo(() => payload?.notes ?? [], [payload]);
+    const timeStr = date.toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    if (isToday) return `今天 ${timeStr}`;
+    if (isYesterday) return `昨天 ${timeStr}`;
+    return date.toLocaleDateString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div
@@ -141,75 +101,23 @@ export function CheckPhoneNotesPage({
               justifyContent: "center",
               padding: 0,
               boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+              cursor: "pointer",
             }}
           >
             <ChevronLeft size={20} color="#111" strokeWidth={2} />
           </button>
 
           <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={loading}
-              aria-label="Refresh"
-              style={{
-                background: "#fae389",
-                color: "#111",
-                border: "none",
-                width: "38px",
-                height: "38px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                padding: 0,
-              }}
-            >
-              <RefreshCw
-                size={17}
-                strokeWidth={2.5}
-                className={loading ? "cp-spin" : ""}
-              />
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmClearOpen(true)}
-              disabled={loading || !snapshot}
-              aria-label="Clear notes snapshot"
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "none",
-                width: "38px",
-                height: "38px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 0,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-              }}
-            >
-              <Trash2 size={17} strokeWidth={2} />
-            </button>
+            <div style={{
+              fontSize: "12px",
+              color: "#666",
+              padding: "8px 12px",
+            }}>
+              {character.name} 正在查看
+            </div>
           </div>
         </div>
       </header>
-
-      {loading && (
-        <div
-          className="cp-refresh-indicator cp-refresh-indicator--floating"
-          aria-live="polite"
-        >
-          <span className="cp-refresh-indicator-text">正在刷新备忘录</span>
-          <span className="cp-refresh-indicator-dots" aria-hidden="true">
-            <i></i>
-            <i></i>
-            <i></i>
-          </span>
-        </div>
-      )}
 
       <div style={{ flex: 1, padding: "0 16px 48px", overflowY: "auto" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", margin: "0 8px 20px" }}>
@@ -235,7 +143,7 @@ export function CheckPhoneNotesPage({
               fontStyle: "italic",
             }}
           >
-            PRIVATE FRAGMENTS
+            用户的真实备忘录
           </div>
         </div>
 
@@ -249,20 +157,18 @@ export function CheckPhoneNotesPage({
               fontStyle: "italic",
             }}
           >
-            Retrieving fragments...
+            加载中...
           </div>
         )}
 
-        {loaded && !payload && !loading && (
+        {loaded && notes.length === 0 && (
           <div className="cp-empty-copy">
-            <p>暂无备忘录内容</p>
-            <span>点刷新同步备忘录片段</span>
+            <p>用户还没有创建备忘录</p>
+            <span>备忘录是空的</span>
           </div>
         )}
 
-        {error ? <CheckPhoneDebugErrorCard error={error} debugRawOutput={debugRawOutput} /> : null}
-
-        {payload && (
+        {loaded && notes.length > 0 && (
           <div>
             {notes.map((note) => {
               return (
@@ -316,7 +222,7 @@ export function CheckPhoneNotesPage({
                           width: "32px",
                           height: "32px",
                           borderRadius: "50%",
-                          background: "#111",
+                          background: "#4CAF50",
                           color: "#fff",
                           display: "flex",
                           alignItems: "center",
@@ -325,7 +231,7 @@ export function CheckPhoneNotesPage({
                           fontWeight: 800,
                         }}
                       >
-                        {character.name.trim().slice(0, 1) || "?"}
+                        我
                       </div>
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         <span
@@ -335,40 +241,13 @@ export function CheckPhoneNotesPage({
                             color: "#111",
                           }}
                         >
-                          {character.name}
+                          用户备忘录
                         </span>
                         <span style={{ fontSize: "calc(10px*var(--app-text-scale,1))", color: "#999" }}>
-                          {note.updatedLabel}
+                          {formatDate(note.updatedAt)}
                         </span>
                       </div>
                     </div>
-                    {note.pinned ? (
-                      <div
-                        style={{
-                          background: "#ecfdf5",
-                          color: "#10b981",
-                          fontSize: "calc(10px*var(--app-text-scale,1))",
-                          padding: "3px 7px",
-                          borderRadius: "4px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        ✓ 置顶
-                      </div>
-                    ) : note.tagLabel ? (
-                      <div
-                        style={{
-                          background: "#ecfdf5",
-                          color: "#10b981",
-                          fontSize: "calc(10px*var(--app-text-scale,1))",
-                          padding: "3px 7px",
-                          borderRadius: "4px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        ✓ {note.tagLabel}
-                      </div>
-                    ) : null}
                   </div>
 
                   <div style={{ marginBottom: "10px" }}>
@@ -385,7 +264,7 @@ export function CheckPhoneNotesPage({
                         }}
                       >
                         <span style={{ position: "relative", zIndex: 1 }}>
-                          <CheckPhoneBilingualText text={note.title} tone="notes" />
+                          {note.title}
                           <span
                             style={{
                               position: "absolute",
@@ -412,46 +291,14 @@ export function CheckPhoneNotesPage({
                       wordBreak: "break-word",
                     }}
                   >
-                    <CheckPhoneBilingualText text={note.body} tone="notes" />
+                    {note.content}
                   </p>
-                  {note.imageDescription && (
-                    <div
-                      style={{
-                        alignSelf: "center",
-                        width: "100%",
-                        marginTop: "18px",
-                        padding: "10px 12px",
-                        background: "#fff1a8",
-                        color: "#6f642f",
-                        fontSize: "calc(11px*var(--app-text-scale,1))",
-                        fontStyle: "italic",
-                        lineHeight: 1.55,
-                        boxShadow: "0 2px 5px rgba(92, 73, 22, 0.035)",
-                        borderRadius: "2px",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      <CheckPhoneBilingualText text={note.imageDescription} tone="notes" />
-                    </div>
-                  )}
                 </article>
               );
             })}
           </div>
         )}
       </div>
-      {confirmClearOpen && (
-        <ConfirmDialog
-          title="清空备忘录内容？"
-          message="确认后会清空当前备忘录缓存。之后重新刷新时，不会再带入旧备忘录内容。"
-          variant="danger"
-          confirmLabel="确认清空"
-          cancelLabel="取消"
-          onConfirm={handleClear}
-          onCancel={() => setConfirmClearOpen(false)}
-        />
-      )}
     </div>
   );
 }
