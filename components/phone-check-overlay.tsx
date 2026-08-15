@@ -151,8 +151,13 @@ export function PhoneCheckOverlay({
     };
   }, [session?.userControlGranted]);
 
-  // 只有在真正有动作或用户控制时才显示
-  if (!session?.isActive || (session.actions.length === 0 && !session.userControlGranted)) {
+  // 严格检查：必须有 session 且处于激活状态且有实际内容
+  if (!session) return null;
+  if (!session.isActive) return null;
+  
+  // 如果没有动作、没有用户控制、也没有正在执行的动画，说明是空 session，不显示
+  const hasContent = session.actions.length > 0 || session.userControlGranted || currentAction || isAnimating;
+  if (!hasContent) {
     return null;
   }
 
