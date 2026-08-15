@@ -161,7 +161,11 @@ export function PhoneCheckOverlay({
     return null;
   }
 
+  // 额外安全检查：如果既不是用户控制，也没有待执行的动作，强制退出
   const isUserControl = session.userControlGranted;
+  if (!isUserControl && session.actions.length === 0 && !currentAction && !isAnimating) {
+    return null;
+  }
 
   return (
     <>
