@@ -70,6 +70,7 @@ export type ChatSession = {
     allowAdminActionsOnUser?: boolean; // characters may kick/mute the user (default off)
     isSpectator?: boolean; // 围观群：用户不在群内，只能生成/线下
     worldLineId?: string; // 所属世界线 ID（未设置时归属默认世界线）
+    allowPhoneCheck?: boolean; // 允许角色查看手机（默认关闭）
 };
 
 export type ChatMessageStatus = "sending" | "sent" | "read" | "failed";
