@@ -15,6 +15,7 @@ import { GroupCreateModal } from "./group-create-modal";
 import { formatChatUiTime } from "@/lib/chat-time";
 import { kvSet } from "@/lib/kv-db";
 import { ChatFallbackAvatar } from "./chat-fallback-avatar";
+import { WorldLineSelector } from "./worldline-selector";
 import {
     getMascotLastPreview,
     getMascotChatSnapshot,
@@ -120,22 +121,13 @@ export function ChatMessageList({ onCloseApp, activeSession, onSelectSession, on
                         <button className="page-back-btn shrink-0 mr-2" type="button" onClick={onCloseApp} aria-label="返回">
                             <ChevronLeft size={24} strokeWidth={1.5} />
                         </button>
-                        <div className="flex items-center gap-[10px]">
-                            <div className="w-[36px] h-[36px] rounded-full overflow-hidden bg-[var(--c-input)] flex items-center justify-center shrink-0">
-                                {identity?.avatarUrl ? (
-                                    <img src={identity.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <ChatFallbackAvatar />
-                                )}
-                            </div>
-                            <div className="flex flex-col whitespace-nowrap">
-                                <span className="ts-16 font-bold text-[var(--c-text-title)] leading-tight">{identity?.name || "用户"}</span>
-                                <div className="flex items-center gap-1 mt-1">
-                                    <span className="w-[8px] h-[8px] rounded-full bg-[#2dd36f]"></span>
-                                    <span className="ts-10 text-[var(--c-icon)] font-medium">在线</span>
-                                </div>
-                            </div>
-                        </div>
+                        <WorldLineSelector 
+                            onWorldLineChange={() => {
+                                // 世界线切换后，刷新会话列表和身份
+                                setSessions(loadChatSessions());
+                                setIdentity(resolveUserIdentity());
+                            }}
+                        />
                     </div>
                 }
                 rightAction={

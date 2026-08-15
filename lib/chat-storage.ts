@@ -12,6 +12,7 @@ import { kvGet, kvSet, registerKvMigration } from "./kv-db";
 import { emitChatPluginEvent, runChatPluginTransformSync } from "./chat-plugin-hooks";
 import { parseAIResponse } from "./rich-message-parser";
 import { extractTextToolDirectiveText } from "./text-tool-protocol";
+import { getActiveWorldLineId, DEFAULT_WORLDLINE_ID } from "./worldline-storage";
 
 export const DEFAULT_VISION_IMAGE_PROMPT_LIMIT = 1;
 export const MAX_VISION_IMAGE_PROMPT_LIMIT = 20;
@@ -30,6 +31,7 @@ export type ChatContact = {
     characterId: string; // links to global character in character-storage.ts
     nickname?: string;
     addedAt: string; // ISO date
+    worldLineId?: string; // 所属世界线 ID（未设置时归属默认世界线）
 };
 
 export type ChatSession = {
@@ -67,6 +69,7 @@ export type ChatSession = {
     groupMutes?: Record<string, string>; // (characterId | "self") → mute expiry ISO
     allowAdminActionsOnUser?: boolean; // characters may kick/mute the user (default off)
     isSpectator?: boolean; // 围观群：用户不在群内，只能生成/线下
+    worldLineId?: string; // 所属世界线 ID（未设置时归属默认世界线）
 };
 
 export type ChatMessageStatus = "sending" | "sent" | "read" | "failed";
@@ -558,6 +561,7 @@ function normalizeChatContacts(contacts: ChatContact[]): NormalizedList<ChatCont
     const normalized: ChatContact[] = [];
     const indexByCharacter = new Map<string, number>();
     let changed = false;
+    const currentWorldLineId = getActiveWorldLineId();
 
     for (const contact of contacts) {
         const characterId = contact.characterId?.trim();
@@ -565,7 +569,13 @@ function normalizeChatContacts(contacts: ChatContact[]): NormalizedList<ChatCont
             changed = true;
             continue;
         }
-        const item = characterId === contact.characterId ? contact : { ...contact, characterId };
+        
+        // 确保每个联系人都有 worldLineId，未设置的归属当前世界线
+        const worldLineId = contact.worldLineId || currentWorldLineId;
+        const item = characterId === contact.characterId && contact.worldLineId === worldLineId
+            ? contact
+            : { ...contact, characterId, worldLineId };
+        
         const existingIndex = indexByCharacter.get(characterId);
         if (existingIndex === undefined) {
             indexByCharacter.set(characterId, normalized.length);
@@ -605,6 +615,7 @@ function normalizeChatSessions(sessions: ChatSession[]): NormalizedSessionList {
     const idOrder: string[] = [];
     const redirects = new Map<string, string>();
     let changed = false;
+    const currentWorldLineId = getActiveWorldLineId();
 
     for (const session of sessions) {
         const id = session.id?.trim();
@@ -613,9 +624,13 @@ function normalizeChatSessions(sessions: ChatSession[]): NormalizedSessionList {
             changed = true;
             continue;
         }
-        const item = id === session.id && contactId === session.contactId
+        
+        // 确保每个会话都有 worldLineId，未设置的归属当前世界线
+        const worldLineId = session.worldLineId || currentWorldLineId;
+        const item = id === session.id && contactId === session.contactId && session.worldLineId === worldLineId
             ? session
-            : { ...session, id, contactId };
+            : { ...session, id, contactId, worldLineId };
+            
         const existing = byId.get(id);
         if (!existing) {
             byId.set(id, item);
@@ -961,30 +976,72 @@ export function isChatStorageHydrated(): boolean {
     return _hydrated;
 }
 
+/**
+ * 重新加载聊天存储（世界线切换时调用）
+ * 清空内存缓存，强制从 IndexedDB 重新加载并按当前世界线过滤
+ */
+export function reloadChatStorage(): void {
+    if (!_hydrated) return;
+    _contactsCache = [];
+    _sessionsCache = [];
+    _messagesCache = [];
+    // 不重置 _hydrated 和 _hydratePromise，避免重复初始化
+    // 直接重新加载会触发世界线过滤
+}
+
 function _loadAllMessages(): ChatMessage[] {
     return _messagesCache;
 }
 
 // ── CRUD for Contacts ─────────────────────────
 export function loadChatContacts(): ChatContact[] {
-    let normalized = normalizeChatContacts(_contactsCache);
-    normalized = restoreContactsForPrivateSessions(normalized.items, _sessionsCache);
+    const currentWorldLineId = getActiveWorldLineId();
+    
+    // 只返回当前世界线的联系人
+    const worldLineContacts = _contactsCache.filter(c => 
+        (c.worldLineId || DEFAULT_WORLDLINE_ID) === currentWorldLineId
+    );
+    
+    let normalized = normalizeChatContacts(worldLineContacts);
+    const worldLineSessions = _sessionsCache.filter(s =>
+        (s.worldLineId || DEFAULT_WORLDLINE_ID) === currentWorldLineId
+    );
+    normalized = restoreContactsForPrivateSessions(normalized.items, worldLineSessions);
+    
     if (normalized.changed) {
-        _contactsCache = normalized.items;
-        if (_hydrated && typeof window !== "undefined") dbReplaceContacts(normalized.items);
+        // 更新缓存中对应世界线的联系人
+        const otherWorldLineContacts = _contactsCache.filter(c =>
+            (c.worldLineId || DEFAULT_WORLDLINE_ID) !== currentWorldLineId
+        );
+        _contactsCache = [...otherWorldLineContacts, ...normalized.items];
+        if (_hydrated && typeof window !== "undefined") dbReplaceContacts(_contactsCache);
     }
-    return _contactsCache;
+    return normalized.items;
 }
 
 export function saveChatContacts(contacts: ChatContact[]) {
-    const normalized = normalizeChatContacts(contacts);
-    _contactsCache = normalized.items;
+    const currentWorldLineId = getActiveWorldLineId();
+    
+    // 确保保存的联系人都标记为当前世界线
+    const markedContacts = contacts.map(c => ({
+        ...c,
+        worldLineId: c.worldLineId || currentWorldLineId
+    }));
+    
+    const normalized = normalizeChatContacts(markedContacts);
+    
+    // 合并其他世界线的联系人
+    const otherWorldLineContacts = _contactsCache.filter(c =>
+        (c.worldLineId || DEFAULT_WORLDLINE_ID) !== currentWorldLineId
+    );
+    _contactsCache = [...otherWorldLineContacts, ...normalized.items];
+    
     if (!_hydrated && typeof window !== "undefined") {
         console.warn("[ChatStorage] saveChatContacts before hydration; using additive write to avoid replacing existing contacts.");
         dbPutContacts(normalized.items);
         return;
     }
-    dbReplaceContacts(normalized.items);
+    dbReplaceContacts(_contactsCache);
 }
 
 export function addChatContact(characterId: string): ChatContact | null {
@@ -994,10 +1051,12 @@ export function addChatContact(characterId: string): ChatContact | null {
     const contacts = loadChatContacts();
     if (contacts.find(c => c.characterId === characterId)) return null; // already exists
 
+    const currentWorldLineId = getActiveWorldLineId();
     const newContact: ChatContact = {
         id: `contact_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         characterId,
-        addedAt: new Date().toISOString()
+        addedAt: new Date().toISOString(),
+        worldLineId: currentWorldLineId
     };
     saveChatContacts([...contacts, newContact]);
     return newContact;
@@ -1011,27 +1070,53 @@ export function removeChatContact(characterId: string) {
 
 // ── CRUD for Sessions ─────────────────────────
 export function loadChatSessions(): ChatSession[] {
-    const normalized = normalizeChatSessions(_sessionsCache);
+    const currentWorldLineId = getActiveWorldLineId();
+    
+    // 只返回当前世界线的会话
+    const worldLineSessions = _sessionsCache.filter(s =>
+        (s.worldLineId || DEFAULT_WORLDLINE_ID) === currentWorldLineId
+    );
+    
+    const normalized = normalizeChatSessions(worldLineSessions);
     const redirectedMessages = redirectMessagesToPreferredSessions(normalized.redirects);
     const refreshed = refreshSessionPreviewMetadata(normalized.items);
+    
     if (normalized.changed || redirectedMessages > 0 || refreshed.changed) {
-        _sessionsCache = refreshed.items;
-        if (_hydrated && typeof window !== "undefined") dbReplaceSessions(refreshed.items);
+        // 更新缓存中对应世界线的会话
+        const otherWorldLineSessions = _sessionsCache.filter(s =>
+            (s.worldLineId || DEFAULT_WORLDLINE_ID) !== currentWorldLineId
+        );
+        _sessionsCache = [...otherWorldLineSessions, ...refreshed.items];
+        if (_hydrated && typeof window !== "undefined") dbReplaceSessions(_sessionsCache);
     }
-    return _sessionsCache;
+    return refreshed.items;
 }
 
 export function saveChatSessions(sessions: ChatSession[]) {
-    const normalized = normalizeChatSessions(sessions);
+    const currentWorldLineId = getActiveWorldLineId();
+    
+    // 确保保存的会话都标记为当前世界线
+    const markedSessions = sessions.map(s => ({
+        ...s,
+        worldLineId: s.worldLineId || currentWorldLineId
+    }));
+    
+    const normalized = normalizeChatSessions(markedSessions);
     const redirectedMessages = redirectMessagesToPreferredSessions(normalized.redirects);
     const refreshed = refreshSessionPreviewMetadata(normalized.items);
-    _sessionsCache = refreshed.items;
+    
+    // 合并其他世界线的会话
+    const otherWorldLineSessions = _sessionsCache.filter(s =>
+        (s.worldLineId || DEFAULT_WORLDLINE_ID) !== currentWorldLineId
+    );
+    _sessionsCache = [...otherWorldLineSessions, ...refreshed.items];
+    
     if (!_hydrated && typeof window !== "undefined") {
         console.warn("[ChatStorage] saveChatSessions before hydration; using additive write to avoid replacing existing sessions.");
         dbPutSessions(refreshed.items);
         return;
     }
-    if (normalized.changed || redirectedMessages > 0 || refreshed.changed) dbReplaceSessions(refreshed.items);
+    if (normalized.changed || redirectedMessages > 0 || refreshed.changed) dbReplaceSessions(_sessionsCache);
     else dbPutSessions(refreshed.items);
 }
 
@@ -1040,6 +1125,7 @@ export function createOrGetSession(contactId: string): ChatSession {
     const existing = sessions.find(s => s.contactId === contactId);
     if (existing) return existing;
 
+    const currentWorldLineId = getActiveWorldLineId();
     const newSession: ChatSession = {
         id: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         contactId,
@@ -1049,6 +1135,7 @@ export function createOrGetSession(contactId: string): ChatSession {
         bilingualTranslationEnabled: true,
         collapseBilingualTranslation: true,
         visionImagePromptLimit: DEFAULT_VISION_IMAGE_PROMPT_LIMIT,
+        worldLineId: currentWorldLineId,
     };
     saveChatSessions([newSession, ...sessions]); // Prepend new session
     return newSession;
@@ -1057,6 +1144,7 @@ export function createOrGetSession(contactId: string): ChatSession {
 export function createGroupSession(groupName: string, participantIds: string[], options?: { isSpectator?: boolean }): ChatSession {
     const sessions = loadChatSessions();
     const isSpectator = options?.isSpectator === true;
+    const currentWorldLineId = getActiveWorldLineId();
     const newSession: ChatSession = {
         id: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         contactId: `group_${Date.now()}`, // synthetic contactId for group
@@ -1071,6 +1159,7 @@ export function createGroupSession(groupName: string, participantIds: string[], 
         participantIds,
         // 围观群用户不在群内，群主落在第一位成员头上
         groupOwnerId: isSpectator ? participantIds[0] : "self",
+        worldLineId: currentWorldLineId,
         ...(isSpectator ? { isSpectator: true } : {}),
     };
     saveChatSessions([newSession, ...sessions]);

@@ -239,6 +239,10 @@ export function MainApp() {
     void (async () => {
       await hydrateKvDb();
       if (cancelled) return;
+      
+      // 初始化世界线系统（首次使用时自动创建默认世界线）
+      const { initializeWorldLines } = await import("@/lib/worldline-storage");
+      initializeWorldLines();
 
       let nextPreparedTheme: PreparedDesktopTheme | null = null;
       try {

@@ -16,6 +16,7 @@ import { kvGet } from "@/lib/kv-db";
 import { formatXiaohongshuShareForPrompt, type ChatSharePayload } from "@/lib/chat-share";
 import { CHAT_OPEN_SESSION_EVENT, CHAT_OPEN_ADD_CONTACT_EVENT } from "@/lib/chat-notification-events";
 import { getMascotSettingsSnapshot } from "@/lib/mascot-settings";
+import { WORLDLINE_SWITCHED_EVENT } from "@/lib/worldline-storage";
 
 type TabKey = "messages" | "contacts" | "feeds" | "me";
 
@@ -108,6 +109,17 @@ export const PhoneChatApp = memo(function PhoneChatApp({ onClose, initialSession
         };
         window.addEventListener(CHAT_OPEN_ADD_CONTACT_EVENT, handler);
         return () => window.removeEventListener(CHAT_OPEN_ADD_CONTACT_EVENT, handler);
+    }, []);
+
+    // 监听世界线切换事件，关闭当前会话并切换到消息列表
+    useEffect(() => {
+        const handler = () => {
+            setActiveSession(null);
+            setActiveMascot(false);
+            setActiveTab("messages");
+        };
+        window.addEventListener(WORLDLINE_SWITCHED_EVENT, handler);
+        return () => window.removeEventListener(WORLDLINE_SWITCHED_EVENT, handler);
     }, []);
 
     // Notify parent of session changes + cache visited session + push mascot context
