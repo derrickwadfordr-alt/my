@@ -27,6 +27,7 @@ import { VnApp } from "@/components/vn/vn-app";
 import ReadingApp from "@/components/reading/reading-app";
 import MapApp from "@/components/map/map-app";
 import { DwellingApp } from "@/components/dwelling/dwelling-app";
+import { NotesApp } from "@/components/notes/notes-app";
 import { MascotFloat } from "@/components/mascot/mascot-float";
 import { useMusicControlsOptional } from "@/lib/music-context";
 import { PhoneResourcesApp, type ResourceSubPage } from "@/components/phone-resources-app";
@@ -83,6 +84,8 @@ import {
 } from "@/lib/custom-app-host-api";
 import { CustomAppGlyph, IconGlyph } from "@/components/icon-glyph";
 import { DesktopCustomizer } from "@/components/desktop-customizer";
+import { PhoneCheckOverlay } from "@/components/phone-check-overlay";
+import { isPhoneCheckModeActive, subscribePhoneCheckMode } from "@/lib/phone-check-mode";
 import {
   collectThemeAssetIds,
   getThemeAssetMap,
@@ -1090,6 +1093,7 @@ export function DesktopShell({ initialThemeProfile, initialThemeAssets }: Deskto
   if (activeApp === "xiaohongshu" && !xiaohongshuMounted) setXiaohongshuMounted(true);
   if (activeApp === "shopping" && !shoppingMounted) setShoppingMounted(true);
   const [widgets, setWidgets] = useState<WidgetInstance[]>([]);
+  const [isPhoneCheckMode, setIsPhoneCheckMode] = useState(false);
   const [incomingCall, setIncomingCall] = useState<{
     sessionId: string; type: "voice" | "video"; charName: string; charAvatar: string | null; isGroup?: boolean;
   } | null>(null);
@@ -1098,6 +1102,16 @@ export function DesktopShell({ initialThemeProfile, initialThemeAssets }: Deskto
     if (!incomingCall) return;
     return startIncomingCallVibration();
   }, [incomingCall]);
+
+  // 监听查手机模式状态
+  useEffect(() => {
+    const updatePhoneCheckMode = () => {
+      setIsPhoneCheckMode(isPhoneCheckModeActive());
+    };
+    updatePhoneCheckMode();
+    const unsubscribe = subscribePhoneCheckMode(updatePhoneCheckMode);
+    return unsubscribe;
+  }, []);
   const [chatMessageNotice, setChatMessageNotice] = useState<{
     sessionId: string;
     title: string;
@@ -2055,8 +2069,13 @@ export function DesktopShell({ initialThemeProfile, initialThemeAssets }: Deskto
         customApp,
       };
     }
-    return iconId in ICONS ? { ...ICONS[iconId as IconId], customApp: null as InstalledCustomApp | null } : null;
-  }, [getCustomAppForIcon]);
+    const builtinIcon = iconId in ICONS ? ICONS[iconId as IconId] : null;
+    // 查手机模式下隐藏标记为 hideInPhoneCheck 的应用
+    if (builtinIcon && isPhoneCheckMode && builtinIcon.hideInPhoneCheck) {
+      return null;
+    }
+    return builtinIcon ? { ...builtinIcon, customApp: null as InstalledCustomApp | null } : null;
+  }, [getCustomAppForIcon, isPhoneCheckMode]);
 
   const activeIcon = activeApp ? getDesktopIconMeta(activeApp) : null;
 
@@ -3903,6 +3922,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#121110;color:rgb
       return <ReadingApp onClose={() => setActiveApp(null)} />;
     }
 
+    if (activeApp === "notes") {
+      return <NotesApp onClose={() => setActiveApp(null)} />;
+    }
+
     if (activeApp === "mapmode") {
       return <MapApp onClose={() => setActiveApp(null)} />;
     }
@@ -4857,6 +4880,26 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#121110;color:rgb
             </div>
           </div>
         </div>
+
+        {/* 查手机模式覆盖层 */}
+        <PhoneCheckOverlay
+          onOpenApp={(appId) => setActiveApp(appId as DesktopIconId)}
+          onOpenChat={(contactId) => {
+            setActiveApp("chat");
+            setChatInitSessionId(contactId);
+          }}
+          onSendMessage={(contactId, content) => {
+            const sessions = loadChatSessions();
+            const session = sessions.find(s => s.contactId === contactId && !s.isGroup);
+            if (session) {
+              pushChatMessage({
+                sessionId: session.id,
+                role: "user",
+                content,
+              });
+            }
+          }}
+        />
       </section>
     </>
   );
