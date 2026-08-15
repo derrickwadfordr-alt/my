@@ -178,7 +178,7 @@ export function SplashAnimation() {
         this.text = config.text;
         this.idx = idx;
         this.config = config;
-        this.fontSize = Math.max(11, Math.min(13, W * 0.032));
+        this.fontSize = Math.max(12, Math.min(15, W * 0.038));
         this.padX = this.fontSize * 0.86;
         const padY = this.fontSize * 0.52;
         this.textColor = this.side === "left" ? INK : "#FFFFFF";
@@ -231,6 +231,7 @@ export function SplashAnimation() {
       }
       draw(t: number) {
         if (this.scale <= 0.001) return;
+        if (t > T.detach) return;
         const baseCx = this.ax + this.w / 2;
         const cx = lerp(baseCx, this.balloonCenterX + this.driftX, this.morph);
         const cy = this.ay + this.h / 2 + this.driftY;
@@ -326,7 +327,27 @@ export function SplashAnimation() {
             ctx.font = `300 ${this.fontSize}px ${FONT_UI}`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(this.textReveal < 1 ? this.text.slice(0, Math.ceil(this.text.length * this.textReveal)) : this.text, 0, 0);
+            const displayText = this.textReveal < 1 ? this.text.slice(0, Math.ceil(this.text.length * this.textReveal)) : this.text;
+            const maxWidth = this.w - this.padX * 0.5;
+            const words = displayText.split(' ');
+            const lines: string[] = [];
+            let currentLine = '';
+            for (const word of words) {
+              const testLine = currentLine ? currentLine + ' ' + word : word;
+              const metrics = ctx.measureText(testLine);
+              if (metrics.width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+              } else {
+                currentLine = testLine;
+              }
+            }
+            if (currentLine) lines.push(currentLine);
+            const lineHeight = this.fontSize * 1.3;
+            const startY = -(lines.length - 1) * lineHeight / 2;
+            lines.forEach((line, i) => {
+              ctx.fillText(line, 0, startY + i * lineHeight);
+            });
           }
         }
         ctx.restore();
