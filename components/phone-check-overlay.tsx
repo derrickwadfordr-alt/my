@@ -151,7 +151,10 @@ export function PhoneCheckOverlay({
     };
   }, [session?.userControlGranted]);
 
-  if (!session?.isActive) return null;
+  // 只有在真正有动作或用户控制时才显示
+  if (!session?.isActive || (session.actions.length === 0 && !session.userControlGranted)) {
+    return null;
+  }
 
   const isUserControl = session.userControlGranted;
 
