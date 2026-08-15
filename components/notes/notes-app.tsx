@@ -120,105 +120,66 @@ export function NotesApp({ onClose }: AppComponentProps) {
     });
   };
 
+  const S = {
+    root: {
+      height: "100%",
+      display: "flex",
+      flexDirection: "column" as const,
+      background: "#f7f7f7",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    },
+    header: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "0 16px",
+      height: "56px",
+      background: "#ededed",
+      borderBottom: "1px solid #d0d0d0",
+      flexShrink: 0,
+    },
+    btn: {
+      width: 36,
+      height: 36,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "none",
+      border: "none",
+      color: "#576b95",
+      cursor: "pointer",
+      fontSize: "16px",
+    },
+    body: {
+      flex: 1,
+      overflowY: "auto" as const,
+      WebkitOverflowScrolling: "touch" as const,
+    },
+  };
+
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f7f7f7",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
+    <div style={S.root}>
       {/* 顶部导航栏 */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 16px",
-          height: "56px",
-          background: "#ededed",
-          borderBottom: "1px solid #d0d0d0",
-        }}
-      >
+      <div style={S.header}>
         {selectedNote && isEditing ? (
           <>
-            <button
-              type="button"
-              onClick={backToList}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                color: "#576b95",
-                fontSize: "16px",
-                background: "none",
-                border: "none",
-                padding: "8px",
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              <ChevronLeft style={{ width: "20px", height: "20px" }} />
+            <button onClick={backToList} style={S.btn}>
+              <ChevronLeft size={20} />
               <span>备忘录</span>
             </button>
-            <button
-              type="button"
-              onClick={saveEdit}
-              style={{
-                color: "#576b95",
-                fontSize: "16px",
-                fontWeight: 500,
-                background: "none",
-                border: "none",
-                padding: "8px 12px",
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
+            <button onClick={saveEdit} style={{ ...S.btn, fontWeight: 500 }}>
               完成
             </button>
           </>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                color: "#576b95",
-                fontSize: "16px",
-                background: "none",
-                border: "none",
-                padding: "8px",
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              <ChevronLeft style={{ width: "20px", height: "20px" }} />
+            <button onClick={onClose} style={S.btn}>
+              <ChevronLeft size={20} />
               <span>返回</span>
             </button>
             <span style={{ fontSize: "18px", fontWeight: 500 }}>备忘录</span>
-            <button
-              type="button"
-              onClick={createNote}
-              style={{
-                color: "#576b95",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "16px",
-                background: "none",
-                border: "none",
-                padding: "8px",
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              <Plus style={{ width: "20px", height: "20px" }} />
+            <button onClick={createNote} style={S.btn}>
+              <Plus size={20} />
               <span>新建</span>
             </button>
           </>
@@ -226,13 +187,7 @@ export function NotesApp({ onClose }: AppComponentProps) {
       </div>
 
       {/* 内容区域 */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
+      <div style={S.body}>
         {selectedNote && isEditing ? (
           // 编辑视图
           <div style={{ padding: "16px" }}>
@@ -293,91 +248,63 @@ export function NotesApp({ onClose }: AppComponentProps) {
             {notes.map((note) => (
               <div
                 key={note.id}
+                onClick={() => openNote(note)}
                 style={{
                   background: "#fff",
                   borderRadius: "8px",
                   padding: "16px",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                   cursor: "pointer",
-                  transition: "background 0.15s",
-                }}
-                onMouseDown={(e) => {
-                  const target = e.currentTarget as HTMLElement;
-                  target.style.background = "#f0f0f0";
-                }}
-                onMouseUp={(e) => {
-                  const target = e.currentTarget as HTMLElement;
-                  target.style.background = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  const target = e.currentTarget as HTMLElement;
-                  target.style.background = "#fff";
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: "12px",
                 }}
               >
-                <div
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: 500,
+                      marginBottom: "4px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {note.title}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "#999",
+                      marginBottom: "8px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    {note.content || "无内容"}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#999" }}>
+                    {formatDate(note.updatedAt)}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => deleteNote(note.id, e)}
                   style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: "12px",
+                    color: "#999",
+                    background: "none",
+                    border: "none",
+                    padding: "8px",
+                    cursor: "pointer",
                   }}
                 >
-                  <div
-                    style={{ flex: 1, cursor: "pointer" }}
-                    onClick={() => openNote(note)}
-                  >
-                    <div
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 500,
-                        marginBottom: "4px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {note.title}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        color: "#999",
-                        marginBottom: "8px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        lineHeight: "1.5",
-                      }}
-                    >
-                      {note.content || "无内容"}
-                    </div>
-                    <div style={{ fontSize: "12px", color: "#999" }}>
-                      {formatDate(note.updatedAt)}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => deleteNote(note.id, e)}
-                    style={{
-                      color: "#999",
-                      background: "none",
-                      border: "none",
-                      padding: "8px",
-                      cursor: "pointer",
-                      WebkitTapHighlightColor: "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.color = "#f56c6c";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.color = "#999";
-                    }}
-                  >
-                    <Trash2 style={{ width: "16px", height: "16px" }} />
-                  </button>
-                </div>
+                  <Trash2 style={{ width: "16px", height: "16px" }} />
+                </button>
               </div>
             ))}
           </div>
