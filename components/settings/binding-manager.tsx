@@ -968,7 +968,7 @@ export function BindingManager() {
                         <div className="flex flex-col gap-3">
                             {renderAuxSelect("memorySummaryApiConfigId", "记忆总结 API")}
                             {renderAuxSelect("embeddingApiConfigId", "向量召回 API")}
-                            {renderAuxSelect("mascotApiConfigId", "小卷助手 API")}
+                            {renderAuxSelect("mascotApiConfigId", "桌面助手 API")}
                             {renderAuxSelect("qaApiConfigId", "工坊 API")}
                             {renderAuxSelect("reasoningTranslateApiConfigId", "思维链翻译 API")}
                         </div>
