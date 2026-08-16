@@ -15,6 +15,7 @@ export const LOCAL_DATA_LIBRARY_CAPABILITY_ID = "local_data_library";
 export const TOOLBOX_MANAGEMENT_CAPABILITY_ID = "toolbox_management";
 export const TIMED_WAKE_CAPABILITY_ID = "timed_wake";
 export const PHONE_CHECK_CONTROL_CAPABILITY_ID = "phone_check_control";
+export const PHONE_CHECK_CONTROL_CAPABILITY_ID = "phone_check_control";
 
 export type InternalToolDefinition = {
     name: string;
