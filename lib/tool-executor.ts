@@ -750,7 +750,7 @@ async function executeInternalTool(call: ToolCall, context?: ToolExecutionContex
     if (call.name === "发送文件") return executeSendFileTool(call);
     if (call.name === "角色电脑") return executeAgentComputerTool(call, context);
     if (call.name === "稍后主动联系" || call.name === "设置定时醒来") return executeTimedWakeTool(call, context);
-    if (call.name === "查手机（增强控制）") return executePhoneCheckControlTool(call, context);
+    if (call.name === "查手机（交互模式）") return executePhoneCheckControlTool(call, context);
 
     if (call.name !== "写入记忆") return null;
 
