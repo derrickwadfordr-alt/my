@@ -28,6 +28,7 @@ export function PhoneCheckOverlay({
   const [currentAction, setCurrentAction] = useState<PhoneCheckControlAction | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationTimeoutRef = useRef<number | null>(null);
+  const [touchRipples, setTouchRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
   useEffect(() => {
     const unsubscribe = subscribePhoneCheckControl(() => {
@@ -68,10 +69,21 @@ export function PhoneCheckOverlay({
     }, 300);
   };
 
+  const showTouchRipple = (x?: number, y?: number) => {
+    const rippleX = x ?? Math.random() * window.innerWidth;
+    const rippleY = y ?? Math.random() * window.innerHeight;
+    const id = Date.now();
+    setTouchRipples(prev => [...prev, { id, x: rippleX, y: rippleY }]);
+    setTimeout(() => {
+      setTouchRipples(prev => prev.filter(r => r.id !== id));
+    }, 800);
+  };
+
   const handleAction = async (action: PhoneCheckControlAction): Promise<void> => {
     switch (action.type) {
       case "swipe":
-        // 播放滑动动画
+        // 播放滑动动画和手势特效
+        showTouchRipple();
         await new Promise((resolve) => setTimeout(resolve, 600));
         break;
 
@@ -86,26 +98,38 @@ export function PhoneCheckOverlay({
         break;
 
       case "openApp":
+        showTouchRipple();
         if (onOpenApp && action.appId) onOpenApp(action.appId);
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
       case "openContact":
+        showTouchRipple();
         if (onOpenChat && action.contactId) onOpenChat(action.contactId);
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
       case "openNotes":
+        showTouchRipple();
         if (onNavigate) onNavigate("/notes");
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
       case "typeText":
-        // 输入文字的动画效果
-        await new Promise((resolve) => setTimeout(resolve, 500 + (action.content?.length || 0) * 50));
+        // 输入文字的动画效果（模拟真实打字速度，带犹豫）
+        const text = action.content || "";
+        const baseDelay = 100; // 每个字符基础延时
+        const hesitationChance = 0.15; // 15%概率停顿思考
+        for (let i = 0; i < text.length; i++) {
+          await new Promise((resolve) => setTimeout(resolve, baseDelay + Math.random() * 100));
+          if (Math.random() < hesitationChance) {
+            await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 500));
+          }
+        }
         break;
 
       case "sendMessage":
+        showTouchRipple();
         if (onSendMessage && action.contactId && action.content) {
           const { recordSentMessage } = await import("@/lib/phone-check-control");
           recordSentMessage(action.contactId, action.contactName || action.contactId, action.content);
@@ -222,6 +246,22 @@ export function PhoneCheckOverlay({
         </div>
       </div>
 
+      {/* 触摸波纹特效 */}
+      {touchRipples.map((ripple) => (
+        <div
+          key={ripple.id}
+          className="fixed pointer-events-none z-[9998]"
+          style={{
+            left: ripple.x,
+            top: ripple.y,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="w-16 h-16 rounded-full border-2 border-white/40 animate-ping" />
+          <div className="absolute inset-0 w-16 h-16 rounded-full bg-white/10 animate-pulse" />
+        </div>
+      ))}
+
       {/* 动作提示 */}
       {currentAction && isAnimating && isAIControl && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10000] bg-black/80 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
@@ -243,21 +283,22 @@ function getActionDescription(action: PhoneCheckControlAction): string {
     case "openApp":
       return "打开应用";
     case "openContact":
-      return "打开聊天";
+      return `打开聊天${action.contactName ? ` · ${action.contactName}` : ""}`;
     case "openNotes":
       return "打开备忘录";
     case "typeText":
-      return "输入文字";
+      const previewText = action.content ? action.content.slice(0, 15) : "";
+      return `打字${previewText ? ` · ${previewText}${action.content && action.content.length > 15 ? "..." : ""}` : "中..."}`;
     case "sendMessage":
-      return "发送消息";
+      return `发送${action.contactName ? ` 给 ${action.contactName}` : "消息"}`;
     case "wait":
       return action.reason || "查看中...";
     case "releaseControl":
-      return "释放控制权";
+      return "放开控制";
     case "resumeControl":
       return "重新接管";
     case "exit":
-      return "退出查手机模式";
+      return "退出查手机";
     default:
       return "";
   }
