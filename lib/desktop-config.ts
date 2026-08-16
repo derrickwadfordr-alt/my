@@ -55,7 +55,7 @@ export type IconMeta = {
   hideInPhoneCheck?: boolean; // 查手机模式下隐藏（避免破坏沉浸感）
 };
 
-export const PAGE_1_DEFAULT: IconId[] = ["chat", "diary", "notes", "music", "calendar", "checkphone", "shopping", "reading"];
+export const PAGE_1_DEFAULT: IconId[] = ["chat", "diary", "music", "calendar", "checkphone", "shopping", "reading"];
 
 export const PAGE_2_DEFAULT: IconId[] = [
   "cocreate",
