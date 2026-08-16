@@ -4525,6 +4525,22 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#121110;color:rgb
                                     ) : null}
                                   </span>
                                   <span className="icon-label">{icon.label}</span>
+                                  {editMode && !isDragging && (
+                                    <button
+                                      className="icon-delete-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        const nextLayout = { ...layoutRef.current };
+                                        nextLayout[pageKey] = (nextLayout[pageKey] || []).filter(p => p.id !== iconId);
+                                        setLayout(nextLayout);
+                                        kvSet(ICON_LAYOUT_STORAGE_KEY, JSON.stringify(nextLayout));
+                                      }}
+                                      aria-label={`删除${icon.label}`}
+                                    >
+                                      ×
+                                    </button>
+                                  )}
                                 </button>
                               );
                             })}
