@@ -1263,7 +1263,7 @@ const BUILTIN_INTERNAL_CAPABILITIES: InternalCapabilityConfig[] = [
         id: PHONE_CHECK_CONTROL_CAPABILITY_ID,
         name: "查手机（增强控制）",
         description: "真实控制{{user}}的手机屏幕：可以滑动、打开应用、打开聊天、在备忘录或聊天框输入文字、用{{user}}身份发消息、释放控制权让{{user}}操作并监听反馈。",
-        enabled: false,
+        enabled: true,
         mode: "auto",
         createdAt: 0,
         updatedAt: 0,
