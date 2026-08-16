@@ -14,6 +14,7 @@ export const AGENT_COMPUTER_CAPABILITY_ID = "agent_computer";
 export const LOCAL_DATA_LIBRARY_CAPABILITY_ID = "local_data_library";
 export const TOOLBOX_MANAGEMENT_CAPABILITY_ID = "toolbox_management";
 export const TIMED_WAKE_CAPABILITY_ID = "timed_wake";
+export const PHONE_CHECK_CONTROL_CAPABILITY_ID = "phone_check_control";
 
 export type InternalToolDefinition = {
     name: string;
@@ -1258,6 +1259,15 @@ const BUILTIN_INTERNAL_CAPABILITIES: InternalCapabilityConfig[] = [
         createdAt: 0,
         updatedAt: 0,
     },
+    {
+        id: PHONE_CHECK_CONTROL_CAPABILITY_ID,
+        name: "查手机（增强控制）",
+        description: "真实控制{{user}}的手机屏幕：可以滑动、打开应用、打开聊天、在备忘录或聊天框输入文字、用{{user}}身份发消息、释放控制权让{{user}}操作并监听反馈。",
+        enabled: false,
+        mode: "auto",
+        createdAt: 0,
+        updatedAt: 0,
+    },
 ];
 
 export function loadInternalCapabilities(): InternalCapabilityConfig[] {
@@ -1363,6 +1373,14 @@ export function getInternalCapabilityToolDefinition(capability: InternalCapabili
             usageGuide: TIMED_WAKE_USAGE_GUIDE,
         };
     }
+    if (capability.id === PHONE_CHECK_CONTROL_CAPABILITY_ID) {
+        return {
+            name: capability.name,
+            description: capability.description,
+            parameterSchema: PHONE_CHECK_CONTROL_PARAMETER_SCHEMA,
+            usageGuide: PHONE_CHECK_CONTROL_USAGE_GUIDE,
+        };
+    }
     return null;
 }
 
@@ -1436,3 +1454,107 @@ function ensureBuiltinInternalCapabilities(items: InternalCapabilityConfig[]): I
     if (changed) saveInternalCapabilities(items);
     return items;
 }
+
+const PHONE_CHECK_CONTROL_PARAMETER_SCHEMA = JSON.stringify({
+    type: "object",
+    properties: {
+        actions: {
+            type: "array",
+            description: "要执行的操作序列，按顺序执行",
+            items: {
+                type: "object",
+                properties: {
+                    type: { type: "string" },
+                    direction: { type: "string" },
+                    appId: { type: "string" },
+                    contactId: { type: "string" },
+                    contactName: { type: "string" },
+                    content: { type: "string" },
+                    ms: { type: "number" },
+                    message: { type: "string" },
+                },
+            },
+        },
+    },
+    required: ["actions"],
+});
+
+const PHONE_CHECK_CONTROL_USAGE_GUIDE = [
+    "以下是你获取指令的返回结果：",
+    "能力：查手机（增强控制）",
+    "用途：真实控制{{user}}的手机屏幕，可以滑动、打开应用、输入文字、用{{user}}身份发消息、释放控制权等。",
+    "",
+    "【重要】你在真实控制{{user}}的手机，不是在描述或扮演！输出的是结构化指令，系统会解析后真实执行。",
+    "",
+    "可用操作类型：",
+    "",
+    "1. swipe - 滑动屏幕",
+    "   参数：direction (left|right|up|down)",
+    '   示例：{"type":"swipe","direction":"left"}',
+    "",
+    "2. goHome - 返回主屏幕",
+    '   示例：{"type":"goHome"}',
+    "",
+    "3. goBack - 返回上一页",
+    '   示例：{"type":"goBack"}',
+    "",
+    "4. openApp - 打开应用",
+    "   参数：appId (chat=微信|notes=备忘录|photos=相册|browser=浏览器等)",
+    '   示例：{"type":"openApp","appId":"chat"}',
+    "",
+    "5. openContact - 打开某人的聊天",
+    "   参数：contactId (角色ID), contactName (可选，用于记录)",
+    '   示例：{"type":"openContact","contactId":"char_abc123","contactName":"小明"}',
+    "",
+    "6. openNotes - 打开备忘录",
+    '   示例：{"type":"openNotes"}',
+    "",
+    "7. typeText - 在当前位置输入文字",
+    "   参数：target (notes|chat), contactId (target=chat时必填), content (要输入的内容)",
+    '   示例：{"type":"typeText","target":"notes","content":"今天天气不错"}',
+    "",
+    "8. sendMessage - 用{{user}}身份发送消息（会真的发出去，记录在查手机日志）",
+    "   参数：contactId (角色ID), contactName (用于记录), content (消息内容)",
+    '   示例：{"type":"sendMessage","contactId":"char_abc123","contactName":"小明","content":"在吗？"}',
+    "",
+    "9. wait - 等待一段时间",
+    "   参数：ms (毫秒), reason (可选，说明为什么等待)",
+    '   示例：{"type":"wait","ms":2000,"reason":"等待页面加载"}',
+    "",
+    "10. releaseControl - 释放控制权给{{user}}",
+    "    参数：message (可选，给{{user}}的留言)",
+    '    示例：{"type":"releaseControl","message":"你自己看看吧，我等会儿"}',
+    "    说明：释放后{{user}}的操作会被监听，下次调用时可以看到{{user}}做了什么",
+    "",
+    "11. resumeControl - 重新接管控制权",
+    '    示例：{"type":"resumeControl"}',
+    "",
+    "12. exit - 退出查手机模式",
+    '    示例：{"type":"exit"}',
+    "",
+    "【注意事项】",
+    "- 手机上只有生活应用（微信、备忘录、相册、浏览器等），没有工坊、设置、API配置等系统工具，不要尝试操作它们",
+    "- 用sendMessage发送的消息会被记录为「你用{{user}}身份发的」，不会被你误认为是{{user}}说的",
+    "- releaseControl后{{user}}可以自己操作，你会在下次调用时收到{{user}}的操作记录",
+    "- 输入文字或发消息前，确保已经打开了对应的应用或聊天",
+    "- 操作要自然流畅，像真人一样有停顿和思考时间（用wait）",
+    "",
+    "【调用格式】",
+    "必须输出JSON格式，包含actions数组：",
+    "",
+    '{',
+    '  "actions": [',
+    '    {"type":"goHome"},',
+    '    {"type":"wait","ms":1000},',
+    '    {"type":"openApp","appId":"chat"},',
+    '    {"type":"wait","ms":1500},',
+    '    {"type":"swipe","direction":"down"},',
+    '    {"type":"openContact","contactId":"char_123","contactName":"小明"},',
+    '    {"type":"typeText","target":"chat","contactId":"char_123","content":"在吗"},',
+    '    {"type":"wait","ms":2000,"reason":"想了想要不要发"},',
+    '    {"type":"sendMessage","contactId":"char_123","contactName":"小明","content":"在吗"}',
+    '  ]',
+    '}',
+    "",
+    "执行时只输出JSON指令，不要附加任何解释或闲聊。",
+].join("\n");

@@ -3,39 +3,41 @@
 import { useEffect, useState, useRef } from "react";
 import { X } from "lucide-react";
 import {
-  getCurrentPhoneCheckSession,
-  subscribePhoneCheckMode,
-  exitPhoneCheckMode,
-  executeNextAction,
-  recordUserAction,
-  type PhoneCheckAction,
-} from "@/lib/phone-check-mode";
+  getCurrentControlSession,
+  subscribePhoneCheckControl,
+  exitPhoneCheckControl,
+  dequeueNextAction,
+  recordUserControlAction,
+  type PhoneCheckControlAction,
+} from "@/lib/phone-check-control";
 
 interface PhoneCheckOverlayProps {
   onOpenApp?: (appId: string) => void;
   onOpenChat?: (contactId: string) => void;
   onSendMessage?: (contactId: string, content: string) => void;
+  onNavigate?: (path: string) => void;
 }
 
 export function PhoneCheckOverlay({
   onOpenApp,
   onOpenChat,
   onSendMessage,
+  onNavigate,
 }: PhoneCheckOverlayProps) {
-  const [session, setSession] = useState(() => getCurrentPhoneCheckSession());
-  const [currentAction, setCurrentAction] = useState<PhoneCheckAction | null>(null);
+  const [session, setSession] = useState(() => getCurrentControlSession());
+  const [currentAction, setCurrentAction] = useState<PhoneCheckControlAction | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const unsubscribe = subscribePhoneCheckMode(() => {
-      setSession(getCurrentPhoneCheckSession());
+    const unsubscribe = subscribePhoneCheckControl(() => {
+      setSession(getCurrentControlSession());
     });
     return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (!session?.isActive) {
+    if (!session?.isActive || session.controlState !== "ai") {
       setCurrentAction(null);
       setIsAnimating(false);
       return;
@@ -46,9 +48,9 @@ export function PhoneCheckOverlay({
   }, [session]);
 
   const executeActionSequence = async () => {
-    if (!session?.isActive) return;
+    if (!session?.isActive || session.controlState !== "ai") return;
 
-    const action = executeNextAction();
+    const action = dequeueNextAction();
     if (!action) return;
 
     setCurrentAction(action);
@@ -63,53 +65,77 @@ export function PhoneCheckOverlay({
     }
     animationTimeoutRef.current = window.setTimeout(() => {
       executeActionSequence();
-    }, 500);
+    }, 300);
   };
 
-  const handleAction = async (action: PhoneCheckAction): Promise<void> => {
+  const handleAction = async (action: PhoneCheckControlAction): Promise<void> => {
     switch (action.type) {
       case "swipe":
         // 播放滑动动画
         await new Promise((resolve) => setTimeout(resolve, 600));
         break;
 
+      case "goHome":
+        if (onNavigate) onNavigate("/");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        break;
+
+      case "goBack":
+        if (typeof window !== "undefined") window.history.back();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        break;
+
       case "openApp":
-        if (onOpenApp) onOpenApp(action.appId);
+        if (onOpenApp && action.appId) onOpenApp(action.appId);
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
-      case "openChat":
-        if (onOpenChat) onOpenChat(action.contactId);
+      case "openContact":
+        if (onOpenChat && action.contactId) onOpenChat(action.contactId);
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
       case "openNotes":
-        if (onOpenApp) onOpenApp("notes");
+        if (onNavigate) onNavigate("/notes");
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
-      case "typeInNotes":
-        // 模拟打字动画
-        await new Promise((resolve) => setTimeout(resolve, action.content.length * 100));
+      case "typeText":
+        // 输入文字的动画效果
+        await new Promise((resolve) => setTimeout(resolve, 500 + (action.content?.length || 0) * 50));
         break;
 
       case "sendMessage":
-        if (onSendMessage) onSendMessage(action.contactId, action.content);
+        if (onSendMessage && action.contactId && action.content) {
+          const { recordSentMessage } = await import("@/lib/phone-check-control");
+          recordSentMessage(action.contactId, action.contactName || action.contactId, action.content);
+          onSendMessage(action.contactId, action.content);
+        }
         await new Promise((resolve) => setTimeout(resolve, 1000));
         break;
 
       case "wait":
-        await new Promise((resolve) => setTimeout(resolve, action.ms));
+        await new Promise((resolve) => setTimeout(resolve, action.ms || 1000));
+        break;
+
+      case "releaseControl":
+        const { releaseControlToUser } = await import("@/lib/phone-check-control");
+        releaseControlToUser(action.message);
+        break;
+
+      case "resumeControl":
+        const { resumeAIControl } = await import("@/lib/phone-check-control");
+        resumeAIControl();
         break;
 
       case "exit":
-        exitPhoneCheckMode();
+        exitPhoneCheckControl();
         break;
     }
   };
 
   const handleForceExit = () => {
-    exitPhoneCheckMode();
+    exitPhoneCheckControl();
   };
 
   useEffect(() => {
@@ -122,11 +148,11 @@ export function PhoneCheckOverlay({
 
   // 监听用户在控制期间的操作
   useEffect(() => {
-    if (!session?.userControlGranted) return;
+    if (!session || session.controlState !== "user") return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key.length === 1) {
-        recordUserAction({
+        recordUserControlAction({
           type: "type",
           timestamp: Date.now(),
           data: { content: e.key },
@@ -135,7 +161,7 @@ export function PhoneCheckOverlay({
     };
 
     const handleNavigation = () => {
-      recordUserAction({
+      recordUserControlAction({
         type: "navigate",
         timestamp: Date.now(),
         data: { location: window.location.pathname },
@@ -149,28 +175,18 @@ export function PhoneCheckOverlay({
       window.removeEventListener("keypress", handleKeyPress);
       window.removeEventListener("popstate", handleNavigation);
     };
-  }, [session?.userControlGranted]);
+  }, [session?.controlState]);
 
-  // 严格检查：必须有 session 且处于激活状态且有实际内容
-  if (!session) return null;
-  if (!session.isActive) return null;
-  
-  // 如果没有动作、没有用户控制、也没有正在执行的动画，说明是空 session，不显示
-  const hasContent = session.actions.length > 0 || session.userControlGranted || currentAction || isAnimating;
-  if (!hasContent) {
-    return null;
-  }
+  // 严格检查：必须有 session 且处于激活状态
+  if (!session?.isActive) return null;
 
-  // 额外安全检查：如果既不是用户控制，也没有待执行的动作，强制退出
-  const isUserControl = session.userControlGranted;
-  if (!isUserControl && session.actions.length === 0 && !currentAction && !isAnimating) {
-    return null;
-  }
+  const isUserControl = session.controlState === "user";
+  const isAIControl = session.controlState === "ai";
 
   return (
     <>
       {/* 半透明遮罩 - 只在 AI 控制时禁用用户操作 */}
-      {!isUserControl && (
+      {isAIControl && (
         <div
           className="fixed inset-0 z-[9999] bg-black/20 pointer-events-auto"
           style={{ touchAction: "none" }}
@@ -207,7 +223,7 @@ export function PhoneCheckOverlay({
       </div>
 
       {/* 动作提示 */}
-      {currentAction && isAnimating && (
+      {currentAction && isAnimating && isAIControl && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10000] bg-black/80 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
           {getActionDescription(currentAction)}
         </div>
@@ -216,22 +232,30 @@ export function PhoneCheckOverlay({
   );
 }
 
-function getActionDescription(action: PhoneCheckAction): string {
+function getActionDescription(action: PhoneCheckControlAction): string {
   switch (action.type) {
     case "swipe":
       return `向${action.direction === "left" ? "左" : action.direction === "right" ? "右" : action.direction === "up" ? "上" : "下"}滑动`;
+    case "goHome":
+      return "返回主屏幕";
+    case "goBack":
+      return "返回上一页";
     case "openApp":
       return "打开应用";
-    case "openChat":
+    case "openContact":
       return "打开聊天";
     case "openNotes":
       return "打开备忘录";
-    case "typeInNotes":
-      return "正在输入...";
+    case "typeText":
+      return "输入文字";
     case "sendMessage":
       return "发送消息";
     case "wait":
-      return "查看中...";
+      return action.reason || "查看中...";
+    case "releaseControl":
+      return "释放控制权";
+    case "resumeControl":
+      return "重新接管";
     case "exit":
       return "退出查手机模式";
     default:

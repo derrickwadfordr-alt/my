@@ -750,6 +750,7 @@ async function executeInternalTool(call: ToolCall, context?: ToolExecutionContex
     if (call.name === "发送文件") return executeSendFileTool(call);
     if (call.name === "角色电脑") return executeAgentComputerTool(call, context);
     if (call.name === "稍后主动联系" || call.name === "设置定时醒来") return executeTimedWakeTool(call, context);
+    if (call.name === "查手机（增强控制）") return executePhoneCheckControlTool(call, context);
 
     if (call.name !== "写入记忆") return null;
 
@@ -4344,4 +4345,92 @@ export function formatToolResults(results: ToolResult[]): string {
         return `<action_result name="${r.name}" error="${r.error || "未知错误"}"></action_result>`;
     }).join("\n");
     return `以下是系统处理结果：\n${items}\n请基于以上结果，继续以角色身份回复用户。不要重复你之前已经说过的内容，不要再次执行相同的动作。`;
+}
+
+
+// ── Phone Check Control Tool ──────────────────
+
+async function executePhoneCheckControlTool(call: ToolCall, context?: ToolExecutionContext): Promise<ToolResult> {
+    const capability = getInternalCapability(PHONE_CHECK_CONTROL_CAPABILITY_ID);
+    if (!capability || !capability.enabled || capability.mode === "off") {
+        return {
+            name: call.name,
+            success: false,
+            error: "查手机（增强控制）能力未启用",
+            continueConversation: false,
+            persistToHistory: false,
+            userNotice: "查手机（增强控制）能力未启用",
+        };
+    }
+
+    if (!isSupportedChatToolContext(context)) {
+        return {
+            name: call.name,
+            success: false,
+            error: "当前场景暂不支持查手机控制",
+            continueConversation: false,
+            persistToHistory: false,
+            userNotice: "当前场景暂不支持查手机控制",
+        };
+    }
+
+    try {
+        const { startPhoneCheckControl, enqueueActions, formatUserActionsForAI, generateCheckPhoneLog } = await import("./phone-check-control");
+        
+        const actions = call.args.actions;
+        if (!Array.isArray(actions) || actions.length === 0) {
+            return {
+                name: call.name,
+                success: false,
+                error: "缺少 actions 参数或 actions 为空",
+                continueConversation: true,
+                persistToHistory: true,
+                userNotice: "查手机操作失败：缺少操作指令",
+            };
+        }
+
+        // 获取角色名
+        const characters = await import("./character-storage").then(m => m.loadCharacters());
+        const character = characters.find(c => c.id === context.characterId);
+        const characterName = character?.name || "角色";
+
+        // 启动控制会话
+        startPhoneCheckControl(context.characterId, characterName);
+
+        // 将操作入队
+        enqueueActions(actions);
+
+        // 获取用户之前的操作记录（如果有）
+        const userActionsLog = formatUserActionsForAI();
+        const sentMessagesLog = generateCheckPhoneLog();
+
+        let resultData = `已开始控制${characterName}的手机屏幕，共 ${actions.length} 个操作指令已排队执行。`;
+        
+        if (userActionsLog && userActionsLog !== "用户没有进行任何操作。") {
+            resultData += `\n\n【用户之前的操作】\n${userActionsLog}`;
+        }
+
+        if (sentMessagesLog) {
+            resultData += `\n\n【你发送的消息记录】\n${sentMessagesLog}`;
+        }
+
+        return {
+            name: call.name,
+            success: true,
+            data: resultData,
+            continueConversation: false,
+            persistToHistory: false,
+            userNotice: `${characterName}正在查看手机`,
+        };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+            name: call.name,
+            success: false,
+            error: message,
+            continueConversation: false,
+            persistToHistory: false,
+            userNotice: `查手机控制失败：${message}`,
+        };
+    }
 }

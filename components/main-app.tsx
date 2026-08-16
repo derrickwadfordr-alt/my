@@ -8,6 +8,7 @@ import { CloudBackupScheduler } from "@/components/cloud-backup-scheduler";
 import { MediaMaintenanceScheduler } from "@/components/media-maintenance-scheduler";
 import { DesktopShell } from "./desktop-shell";
 import { SplashAnimation } from "./splash-animation";
+import { PhoneCheckOverlay } from "./phone-check-overlay";
 import { MusicProvider } from "@/lib/music-context";
 import { hydrateKvDb } from "@/lib/kv-db";
 import { getThemeAssetMap, readThemeProfile } from "@/lib/theme-storage";
@@ -289,6 +290,7 @@ export function MainApp() {
               initialThemeProfile={preparedDesktopTheme?.profile}
               initialThemeAssets={preparedDesktopTheme?.assets}
             />
+            <PhoneCheckOverlay />
             <CloudBackupScheduler />
             <MediaMaintenanceScheduler />
           </MusicProvider>
