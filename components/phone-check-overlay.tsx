@@ -30,6 +30,8 @@ export function PhoneCheckOverlay({
   const animationTimeoutRef = useRef<number | null>(null);
   const [touchRipples, setTouchRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const clickTimestamps = useRef<number[]>([]);
+  const [touchRipples, setTouchRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const clickTimestamps = useRef<number[]>([]);
 
   useEffect(() => {
     const unsubscribe = subscribePhoneCheckControl(() => {
@@ -168,6 +170,24 @@ export function PhoneCheckOverlay({
 
   const handleForceExit = () => {
     exitPhoneCheckControl();
+  };
+
+  const handleEmergencyExit = () => {
+    const now = Date.now();
+    clickTimestamps.current.push(now);
+    clickTimestamps.current = clickTimestamps.current.filter(t => now - t < 1000);
+    
+    if (clickTimestamps.current.length >= 4) {
+      if (onNavigate) onNavigate("/");
+      clickTimestamps.current = [];
+      if (typeof window !== "undefined") {
+        const toast = document.createElement("div");
+        toast.textContent = "已返回主页";
+        toast.style.cssText = "position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:white;padding:12px 24px;border-radius:8px;z-index:10001;";
+        document.body.appendChild(toast);
+        setTimeout(() => document.body.removeChild(toast), 2000);
+      }
+    }
   };
 
   // 4次快速点击返回主页

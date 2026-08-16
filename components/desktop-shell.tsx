@@ -4920,6 +4920,15 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#121110;color:rgb
               });
             }
           }}
+          onNavigate={(path) => {
+            if (path === "/") {
+              setActiveApp(null);
+            } else if (path === "/notes") {
+              setActiveApp("notes");
+            } else if (path.startsWith("/chat/")) {
+              setActiveApp("chat");
+            }
+          }}
         />
       </section>
     </>
