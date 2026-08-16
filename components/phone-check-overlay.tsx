@@ -29,6 +29,7 @@ export function PhoneCheckOverlay({
   const [isAnimating, setIsAnimating] = useState(false);
   const animationTimeoutRef = useRef<number | null>(null);
   const [touchRipples, setTouchRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const clickTimestamps = useRef<number[]>([]);
 
   useEffect(() => {
     const unsubscribe = subscribePhoneCheckControl(() => {
@@ -169,6 +170,28 @@ export function PhoneCheckOverlay({
     exitPhoneCheckControl();
   };
 
+  // 4次快速点击返回主页
+  const handleEmergencyExit = () => {
+    const now = Date.now();
+    clickTimestamps.current.push(now);
+    // 只保留最近1秒内的点击
+    clickTimestamps.current = clickTimestamps.current.filter(t => now - t < 1000);
+    
+    if (clickTimestamps.current.length >= 4) {
+      // 触发紧急退出：返回主页
+      if (onNavigate) onNavigate("/");
+      clickTimestamps.current = [];
+      // 显示提示
+      if (typeof window !== "undefined") {
+        const toast = document.createElement("div");
+        toast.textContent = "已返回主页";
+        toast.style.cssText = "position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:white;padding:12px 24px;border-radius:8px;z-index:10001;";
+        document.body.appendChild(toast);
+        setTimeout(() => document.body.removeChild(toast), 2000);
+      }
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (animationTimeoutRef.current) {
@@ -216,12 +239,34 @@ export function PhoneCheckOverlay({
 
   return (
     <>
-      {/* 半透明遮罩 - 只在 AI 控制时禁用用户操作 */}
+      {/* 半透明遮罩 - 只在 AI 控制时显示，但不阻止点击 */}
       {isAIControl && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/20 pointer-events-auto"
-          style={{ touchAction: "none" }}
+          className="fixed inset-0 z-[9999] bg-black/20 pointer-events-none"
+          onClick={handleEmergencyExit}
         />
+      )}
+      
+      {/* 紧急退出热区 - 屏幕四角 */}
+      {isAIControl && (
+        <>
+          <div
+            className="fixed top-0 left-0 w-16 h-16 z-[9999] pointer-events-auto"
+            onClick={handleEmergencyExit}
+          />
+          <div
+            className="fixed top-0 right-0 w-16 h-16 z-[9999] pointer-events-auto"
+            onClick={handleEmergencyExit}
+          />
+          <div
+            className="fixed bottom-0 left-0 w-16 h-16 z-[9999] pointer-events-auto"
+            onClick={handleEmergencyExit}
+          />
+          <div
+            className="fixed bottom-0 right-0 w-16 h-16 z-[9999] pointer-events-auto"
+            onClick={handleEmergencyExit}
+          />
+        </>
       )}
 
       {/* 顶部提示条 */}

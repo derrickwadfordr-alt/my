@@ -2855,6 +2855,55 @@ export async function approveMemoryWriteRequest(request: MemoryWriteRequest): Pr
     return persistMemoryWriteRequest(request, { approvedByUser: true });
 }
 
+// ── 查手机（交互模式）─────────────────────
+
+async function executePhoneCheckControlTool(call: ToolCall, context?: ToolExecutionContext): Promise<ToolResult> {
+    const capability = getInternalCapability(PHONE_CHECK_CONTROL_CAPABILITY_ID);
+    if (!capability || !capability.enabled || capability.mode === "off") {
+        return {
+            name: "查手机（交互模式）",
+            success: false,
+            error: "查手机（交互模式）能力未启用",
+            userNotice: "查手机（交互模式）能力未启用",
+        };
+    }
+
+    if (!context?.characterId || context.appId !== "chat") {
+        return {
+            name: "查手机（交互模式）",
+            success: false,
+            error: "当前场景暂不支持查手机（交互模式）",
+            userNotice: "当前场景暂不支持查手机（交互模式）",
+        };
+    }
+
+    const { startPhoneCheckControl, enqueueActions } = await import("./phone-check-control");
+    const character = loadCharacters().find(c => c.id === context.characterId);
+    const characterName = character?.name || "对方";
+
+    const actions = Array.isArray(call.args.actions) ? call.args.actions : [];
+    if (actions.length === 0) {
+        return {
+            name: "查手机（交互模式）",
+            success: false,
+            error: "actions 数组为空",
+            userNotice: "查手机操作序列为空",
+        };
+    }
+
+    startPhoneCheckControl(context.characterId, characterName);
+    enqueueActions(actions);
+
+    return {
+        name: "查手机（交互模式）",
+        success: true,
+        data: `已启动查手机模式，共 ${actions.length} 个操作将依次执行。你现在处于查手机状态，屏幕上的内容会在操作后返回给你。`,
+        continueConversation: true,
+        persistToHistory: false,
+        userNotice: `${characterName} 开始查看你的手机`,
+    };
+}
+
 // ── ZIP media extraction ─────────────────────
 
 const MEDIA_EXTENSIONS = /\.(png|jpe?g|gif|webp|mp3|wav|ogg|flac|mp4|webm|mkv|pdf)$/i;
