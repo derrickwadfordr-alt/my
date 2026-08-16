@@ -2167,6 +2167,7 @@ function XiaohongshuShareBubble({ msg }: { msg: ChatMessage }) {
 function VoiceMessageBubble({ msg, characterId, onUpdate, defaultTranslationExpanded = false }: { msg: ChatMessage; characterId?: string; onUpdate?: (m: ChatMessage) => void; defaultTranslationExpanded?: boolean }) {
     const [playing, setPlaying] = useState(false);
     const [synthesizing, setSynthesizing] = useState(false);
+    const [showText, setShowText] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const text = msg.mediaData?.label || "语音消息";
     const bilingual = splitBilingualText(text);
@@ -2244,30 +2245,57 @@ function VoiceMessageBubble({ msg, characterId, onUpdate, defaultTranslationExpa
     });
 
     return (
-        <div className="voice-msg-bubble" onClick={handlePlay}
-            style={{ minWidth: `${Math.min(60 + duration * 8, 220)}px` }}
-        >
-            <div className="voice-msg-icon-shell">
-                <div className="voice-msg-icon">
-                {synthesizing ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
-                ) : playing ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-                ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                )}
+        <>
+            <div className="voice-msg-bubble" onClick={handlePlay}
+                style={{ minWidth: `${Math.min(60 + duration * 8, 220)}px` }}
+            >
+                <div className="voice-msg-icon-shell">
+                    <div className="voice-msg-icon">
+                    {synthesizing ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
+                    ) : playing ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    )}
+                    </div>
                 </div>
+                <div className="voice-msg-bars" {...(playing ? { "data-playing": "" } : {})}>
+                    {barHeights.map((height, i) => (
+                        <div
+                            key={i}
+                            className="voice-msg-bar"
+                            style={{ height: `${height}px`, animationDelay: `${i * 0.08}s` }}
+                        />
+                    ))}
+                </div>
+                <span className="voice-msg-dur">{duration}&quot;</span>
             </div>
-            <div className="voice-msg-bars" {...(playing ? { "data-playing": "" } : {})}>
-                {barHeights.map((height, i) => (
-                    <div
-                        key={i}
-                        className="voice-msg-bar"
-                        style={{ height: `${height}px`, animationDelay: `${i * 0.08}s` }}
-                    />
-                ))}
-            </div>
-            <span className="voice-msg-dur">{duration}&quot;</span>
-        </div>
+            {text && text !== "语音消息" && (
+                <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setShowText(!showText); }}
+                    className="voice-msg-text-toggle"
+                    style={{
+                        marginTop: "4px",
+                        padding: "2px 8px",
+                        fontSize: "11px",
+                        color: "var(--c-icon)",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        opacity: 0.7
+                    }}
+                >
+                    {showText ? "收起" : "显示文字"}
+                </button>
+            )}
+            {showText && text && (
+                <div className="voice-msg-text-bubble">
+                    <BilingualTextBlock text={text} mode="plain" defaultExpanded={defaultTranslationExpanded} />
+                </div>
+            )}
+        </>
     );
 }
