@@ -31,6 +31,7 @@ import {
     saveInternalCapabilities,
     MUSIC_CONTROL_CAPABILITY_ID,
     NOTE_WALL_CAPABILITY_ID,
+    PHONE_CHECK_CONTROL_CAPABILITY_ID,
     TOOLBOX_MANAGEMENT_CAPABILITY_ID,
 } from "@/lib/internal-capability-storage";
 import { discoverMcpTools, startMcpOAuth } from "@/lib/tool-executor";
