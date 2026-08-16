@@ -262,11 +262,11 @@ export function ToolboxSettings() {
     }
 
     function defaultInternalMode(id: string): InternalCapabilityConfig["mode"] {
-        return id === NOTE_WALL_CAPABILITY_ID || id === MUSIC_CONTROL_CAPABILITY_ID || id === CALENDAR_MANAGEMENT_CAPABILITY_ID || id === LOCAL_DATA_LIBRARY_CAPABILITY_ID || id === TOOLBOX_MANAGEMENT_CAPABILITY_ID ? "auto" : "confirm";
+        return id === NOTE_WALL_CAPABILITY_ID || id === MUSIC_CONTROL_CAPABILITY_ID || id === CALENDAR_MANAGEMENT_CAPABILITY_ID || id === LOCAL_DATA_LIBRARY_CAPABILITY_ID || id === TOOLBOX_MANAGEMENT_CAPABILITY_ID || id === PHONE_CHECK_CONTROL_CAPABILITY_ID ? "auto" : "confirm";
     }
 
     function isAutoOnlyInternalCapability(id: string): boolean {
-        return id === NOTE_WALL_CAPABILITY_ID || id === MUSIC_CONTROL_CAPABILITY_ID || id === CALENDAR_MANAGEMENT_CAPABILITY_ID || id === LOCAL_DATA_LIBRARY_CAPABILITY_ID || id === TOOLBOX_MANAGEMENT_CAPABILITY_ID;
+        return id === NOTE_WALL_CAPABILITY_ID || id === MUSIC_CONTROL_CAPABILITY_ID || id === CALENDAR_MANAGEMENT_CAPABILITY_ID || id === LOCAL_DATA_LIBRARY_CAPABILITY_ID || id === TOOLBOX_MANAGEMENT_CAPABILITY_ID || id === PHONE_CHECK_CONTROL_CAPABILITY_ID;
     }
 
     function getAutoOnlyCapabilityDetail(id: string): string {
@@ -284,6 +284,9 @@ export function ToolboxSettings() {
         }
         if (id === TOOLBOX_MANAGEMENT_CAPABILITY_ID) {
             return "工具箱管理开启后，角色可以创建和维护它自己写入的 REST 工具、REST 套件、组合工具和组合工具套件；系统会拒绝修改用户手动创建或内置内容。";
+        }
+        if (id === PHONE_CHECK_CONTROL_CAPABILITY_ID) {
+            return "查手机（交互模式）开启后，角色可以通过输出 JSON 操作序列真实控制用户屏幕：滑动、打开应用、切换聊天、输入文字、发送消息等。还可以临时释放控制权让用户操作，之后查看用户做了什么。";
         }
         return "这是内置工具能力，开启后角色可以在聊天中按需获取并调用对应工具。";
     }
