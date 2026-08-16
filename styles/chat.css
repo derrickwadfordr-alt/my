@@ -56,7 +56,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  z-index: 100;
 }
 
 /* 聊天插件 chat.header 坑位：头部与消息区都是 absolute 浮层，坑位必须自己定位，
@@ -6908,7 +6908,7 @@
   transform: translateY(-12px) !important;
   flex-shrink: 0 !important;
   margin-right: 8px !important;
-  z-index: 10 !important;
+  z-index: 1 !important;
 }
 .chat-room-wrapper .chat-msg-wrapper[data-role="assistant"] .chat-msg-avatar img {
   border-radius: 10px !important;
@@ -6977,7 +6977,7 @@
   border-top-right-radius: 100% !important;
   box-shadow: 6px 0 0 0 #ffffff !important;
   pointer-events: none !important;
-  z-index: 10 !important;
+  z-index: 1 !important;
 }
 
 /* 我方尖角（右侧） - 右上角有尖角 */
@@ -6998,7 +6998,7 @@
   border-top-left-radius: 100% !important;
   box-shadow: -6px 0 0 0 #ffe93a !important;
   pointer-events: none !important;
-  z-index: 10 !important;
+  z-index: 1 !important;
 }
 
 /* 连续消息隐藏尖角 */
