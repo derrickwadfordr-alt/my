@@ -57,8 +57,13 @@ export function PhoneCheckOverlay({
     setCurrentAction(action);
     setIsAnimating(true);
 
-    // 执行动作
-    await handleAction(action);
+    // 执行动作（带容错）
+    try {
+      await handleAction(action);
+    } catch (error) {
+      console.error("[PhoneCheckControl] Action execution failed:", error);
+      // 出错后继续执行下一个动作，避免卡死
+    }
 
     // 继续执行下一个动作
     if (animationTimeoutRef.current) {
@@ -82,8 +87,7 @@ export function PhoneCheckOverlay({
   const handleAction = async (action: PhoneCheckControlAction): Promise<void> => {
     switch (action.type) {
       case "swipe":
-        // 播放滑动动画和手势特效
-        showTouchRipple();
+        // 滑动不显示特效，避免塑料感
         await new Promise((resolve) => setTimeout(resolve, 600));
         break;
 
@@ -98,12 +102,14 @@ export function PhoneCheckOverlay({
         break;
 
       case "openApp":
+        // 打开应用显示点击特效
         showTouchRipple();
         if (onOpenApp && action.appId) onOpenApp(action.appId);
         await new Promise((resolve) => setTimeout(resolve, 800));
         break;
 
       case "openContact":
+        // 打开聊天显示点击特效
         showTouchRipple();
         if (onOpenChat && action.contactId) onOpenChat(action.contactId);
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -129,6 +135,7 @@ export function PhoneCheckOverlay({
         break;
 
       case "sendMessage":
+        // 发送消息显示点击特效
         showTouchRipple();
         if (onSendMessage && action.contactId && action.content) {
           const { recordSentMessage } = await import("@/lib/phone-check-control");
